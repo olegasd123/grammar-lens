@@ -1,0 +1,15 @@
+{"input": "He dont like the cake.", "expected": [{"original": "dont", "corrected": "doesn't", "type": "grammar"}]}
+{"input": "Their going to the store.", "expected": [{"original": "Their", "corrected": "They're", "type": "grammar"}]}
+{"input": "The cat sat on the mat.", "expected": []}
+{"input": "She have been working all day.", "expected": [{"original": "have", "corrected": "has", "type": "grammar"}]}
+{"input": "I recieved the package yesterday.", "expected": [{"original": "recieved", "corrected": "received", "type": "spelling"}]}
+{"input": "The quick brown fox jumps over the lazy dog.", "expected": []}
+{"input": "Me and him went to the store.", "expected": [{"original": "Me and him", "corrected": "He and I", "type": "grammar"}]}
+{"input": "Its a beautiful day outside.", "expected": [{"original": "Its", "corrected": "It's", "type": "grammar"}]}
+{"input": "The students was studying for there exams.", "expected": [{"original": "was", "corrected": "were", "type": "grammar"}, {"original": "there", "corrected": "their", "type": "grammar"}]}
+{"input": "She sings beautifuly.", "expected": [{"original": "beautifuly", "corrected": "beautifully", "type": "spelling"}]}
+{"input": "However the results were inconclusive.", "expected": [{"original": "However the", "corrected": "However, the", "type": "punctuation"}]}
+{"input": "This is a perfectly correct sentence with no errors at all.", "expected": []}
+{"input": "The dog chased it's tail around the yard.", "expected": [{"original": "it's", "corrected": "its", "type": "grammar"}]}
+{"input": "We need to go their for the meeting.", "expected": [{"original": "their", "corrected": "there", "type": "grammar"}]}
+{"input": "The childrens toys were scattered everywhere.", "expected": [{"original": "childrens", "corrected": "children's", "type": "grammar"}]}

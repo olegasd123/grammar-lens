@@ -1,0 +1,17 @@
+name: grammar_engine
+description: Core grammar analysis engine - sentence splitting, prompt building, correction parsing, language detection, text statistics.
+version: 0.1.0
+publish_to: none
+
+environment:
+  sdk: ">=3.6.0 <4.0.0"
+
+dependencies:
+  collection: ^1.19.1
+  meta: ^1.16.0
+
+dev_dependencies:
+  flutter_lints: ^5.0.0
+  test: ^1.25.8
+
+resolution: workspace

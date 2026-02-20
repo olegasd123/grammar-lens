@@ -1,0 +1,33 @@
+{
+  "manifest_version": 3,
+  "name": "GrammarLens",
+  "version": "0.1.0",
+  "description": "Privacy-first grammar checker powered by local AI. Checks grammar, spelling, punctuation, and style without sending your text to the cloud.",
+  "permissions": [
+    "nativeMessaging",
+    "activeTab"
+  ],
+  "content_scripts": [
+    {
+      "matches": ["<all_urls>"],
+      "js": ["dist/content/content-script.js"],
+      "css": ["dist/content/overlay.css"]
+    }
+  ],
+  "background": {
+    "service_worker": "dist/background/service-worker.js"
+  },
+  "action": {
+    "default_popup": "dist/popup/popup.html",
+    "default_icon": {
+      "16": "icons/icon-16.png",
+      "48": "icons/icon-48.png",
+      "128": "icons/icon-128.png"
+    }
+  },
+  "icons": {
+    "16": "icons/icon-16.png",
+    "48": "icons/icon-48.png",
+    "128": "icons/icon-128.png"
+  }
+}

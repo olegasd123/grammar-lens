@@ -1,0 +1,13 @@
+name: grammarlens_workspace
+description: GrammarLens monorepo workspace
+
+environment:
+  sdk: ">=3.6.0 <4.0.0"
+
+workspace:
+  - apps/grammarlens
+  - packages/grammar_engine
+  - packages/llama_inference
+  - packages/model_repository
+  - packages/grammarlens_ui
+  - packages/platform_integration
