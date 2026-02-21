@@ -10,6 +10,7 @@ import 'package:grammarlens/features/editor/presentation/bloc/editor_state.dart'
 import 'package:grammarlens/features/editor/presentation/widgets/suggestion_panel.dart';
 import 'package:grammarlens/features/model_manager/presentation/bloc/model_bloc.dart';
 import 'package:grammarlens/features/model_manager/presentation/bloc/model_state.dart';
+import 'package:grammarlens/features/model_manager/presentation/pages/model_manager_page.dart';
 import 'package:grammarlens/features/model_manager/presentation/widgets/model_status_bar.dart';
 
 /// Main editor page — the core GrammarLens experience.
@@ -133,7 +134,24 @@ class _EditorPageState extends State<EditorPage> {
                   return _StatusIndicator(status: state.status);
                 },
               ),
-              const SizedBox(width: 16),
+              const SizedBox(width: 8),
+
+              // Model manager button
+              IconButton(
+                onPressed: () {
+                  Navigator.of(context).push(
+                    MaterialPageRoute<void>(
+                      builder: (_) => BlocProvider.value(
+                        value: context.read<ModelBloc>(),
+                        child: const ModelManagerPage(),
+                      ),
+                    ),
+                  );
+                },
+                icon: const Icon(Icons.settings),
+                tooltip: 'Models',
+              ),
+              const SizedBox(width: 8),
             ],
           ),
           body: Column(

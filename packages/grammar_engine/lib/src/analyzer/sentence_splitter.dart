@@ -16,9 +16,9 @@ class SentenceSplitter {
     // German
     'bzw', 'usw', 'evtl', 'ggf',
     // French
-    'av', 'apr',
+    'av',
     // Spanish/Portuguese
-    'sr', 'sra', 'ud', 'uds',
+    'sra', 'ud', 'uds',
   };
 
   /// Split text into individual sentences.
