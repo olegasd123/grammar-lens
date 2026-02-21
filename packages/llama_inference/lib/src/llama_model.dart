@@ -1,11 +1,14 @@
 import 'dart:ffi';
 import 'dart:io';
 
+import 'package:ffi/ffi.dart';
 import 'package:logging/logging.dart';
 
+import 'package:llama_inference/src/bindings/llama_bindings.dart';
 import 'package:llama_inference/src/gpu_backend.dart';
 
 final _log = Logger('LlamaModel');
+final _b = LlamaBindings.instance;
 
 /// Represents a loaded GGUF model.
 ///
@@ -88,15 +91,20 @@ class LlamaModel {
       gpuLayers: gpuLayers,
     );
 
-    // TODO: Actual native loading via FFI bindings:
-    // 1. llama_backend_init()
-    // 2. llama_model_default_params() -> set n_gpu_layers, use_mmap, use_mlock
-    // 3. llama_load_model_from_file(path, params)
-    // 4. Store the native pointer
+    final pathNative = path.toNativeUtf8();
+    try {
+      final ptr = _b.modelLoad(pathNative, gpuLayers, useMmap, useMlock);
+      if (ptr == nullptr) {
+        throw LlamaModelException('Failed to load model: $path');
+      }
+      model._nativeModel = ptr;
+    } finally {
+      calloc.free(pathNative);
+    }
 
     model._isLoaded = true;
-    model._memoryUsageBytes = file.lengthSync();
-    model._contextLength = 4096; // Read from model metadata
+    model._memoryUsageBytes = _b.modelSize(model._nativeModel!);
+    model._contextLength = _b.modelNCtxTrain(model._nativeModel!);
 
     _log.info(
       'Model loaded successfully. '
@@ -113,11 +121,28 @@ class LlamaModel {
 
     _log.info('Disposing model: $modelPath');
 
-    // TODO: Actual native cleanup via FFI:
-    // llama_free_model(_nativeModel)
+    if (_nativeModel != null) {
+      _b.modelFree(_nativeModel!);
+    }
     _nativeModel = null;
     _isLoaded = false;
     _memoryUsageBytes = 0;
+  }
+
+  /// Number of model layers.
+  int get layerCount {
+    if (!_isLoaded || _nativeModel == null) return 0;
+    return _b.modelNLayer(_nativeModel!);
+  }
+
+  /// Human-readable model description.
+  String get description {
+    if (!_isLoaded || _nativeModel == null) return '';
+    final buf = calloc<Uint8>(256);
+    _b.modelDesc(_nativeModel!, buf.cast<Utf8>(), 256);
+    final desc = buf.cast<Utf8>().toDartString();
+    calloc.free(buf);
+    return desc;
   }
 
   /// Get the native model pointer for use with [LlamaContext].

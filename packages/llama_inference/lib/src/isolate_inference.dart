@@ -3,9 +3,12 @@ import 'dart:isolate';
 
 import 'package:logging/logging.dart';
 
+import 'package:llama_inference/src/bindings/llama_bindings.dart';
 import 'package:llama_inference/src/gpu_backend.dart';
 import 'package:llama_inference/src/inference_config.dart';
 import 'package:llama_inference/src/inference_result.dart';
+import 'package:llama_inference/src/llama_context.dart';
+import 'package:llama_inference/src/llama_model.dart';
 
 final _log = Logger('IsolateInference');
 
@@ -72,9 +75,8 @@ class IsolateInference {
 
     // Wait for the isolate to send back its command port
     final completer = Completer<SendPort>();
-    late final StreamSubscription<dynamic> sub;
 
-    sub = receivePort.listen((message) {
+    receivePort.listen((message) {
       if (message is SendPort && !completer.isCompleted) {
         completer.complete(message);
       } else if (message is _IsolateMessage) {
@@ -195,22 +197,38 @@ Future<void> _isolateEntryPoint(_InitMessage init) async {
     'Worker isolate started. Loading model: ${init.modelPath}',
   );
 
-  // TODO: Load model via FFI
-  // final model = await LlamaModel.load(init.modelPath, ...);
-  // final context = LlamaContext.create(model, contextSize: init.contextSize);
+  // Initialize backend and load model
+  final bindings = LlamaBindings.instance;
+  bindings.backendInit();
+
+  late final LlamaModel model;
+  late final LlamaContext context;
+
+  try {
+    model = await LlamaModel.load(
+      init.modelPath,
+      gpuLayers: init.gpuLayers,
+      gpuBackend: init.gpuBackend,
+    );
+    context = LlamaContext.create(
+      model,
+      contextSize: init.contextSize,
+    );
+  } catch (e) {
+    _log.severe('Failed to initialize model: $e');
+    init.sendPort.send(_ErrorResult(requestId: 0, error: e.toString()));
+    bindings.backendFree();
+    return;
+  }
 
   // Process requests
   await for (final message in commandPort) {
     if (message is _CompleteRequest) {
       try {
-        // TODO: Run actual inference
-        // final result = await context.complete(message.prompt, config: message.config);
-        final result = InferenceResult(
-          text: '<corrections></corrections>',
-          promptTokens: message.prompt.length ~/ 4,
-          completionTokens: 0,
-          promptEvalTimeMs: 0,
-          completionTimeMs: 0,
+        context.reset();
+        final result = await context.complete(
+          message.prompt,
+          config: message.config,
         );
         init.sendPort.send(_CompletionResult(
           requestId: message.requestId,
@@ -224,14 +242,16 @@ Future<void> _isolateEntryPoint(_InitMessage init) async {
       }
     } else if (message is _StreamRequest) {
       try {
-        // TODO: Run actual streaming inference
-        init.sendPort.send(_TokenResult(
-          requestId: message.requestId,
-          token: const StreamedToken(
-            text: '<corrections></corrections>',
-            isLast: true,
-          ),
-        ));
+        context.reset();
+        await for (final token in context.completeStream(
+          message.prompt,
+          config: message.config,
+        )) {
+          init.sendPort.send(_TokenResult(
+            requestId: message.requestId,
+            token: token,
+          ));
+        }
       } catch (e) {
         init.sendPort.send(_ErrorResult(
           requestId: message.requestId,
@@ -239,10 +259,11 @@ Future<void> _isolateEntryPoint(_InitMessage init) async {
         ));
       }
     } else if (message is _CancelRequest) {
-      // TODO: Abort current inference if matching requestId
       _log.fine('Cancel request received for ${message.requestId}');
     } else if (message is _ShutdownRequest) {
-      // TODO: context.dispose(); model.dispose();
+      context.dispose();
+      model.dispose();
+      bindings.backendFree();
       _log.info('Worker isolate shutting down');
       break;
     }

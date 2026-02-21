@@ -16,7 +16,6 @@ dependencies:
   path: ^1.9.1
 
 dev_dependencies:
-  ffigen: ^16.0.0
   flutter_lints: ^5.0.0
   flutter_test:
     sdk: flutter

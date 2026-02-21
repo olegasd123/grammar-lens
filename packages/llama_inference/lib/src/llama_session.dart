@@ -1,5 +1,6 @@
 import 'package:logging/logging.dart';
 
+import 'package:llama_inference/src/bindings/llama_bindings.dart';
 import 'package:llama_inference/src/gpu_backend.dart';
 import 'package:llama_inference/src/inference_config.dart';
 import 'package:llama_inference/src/inference_result.dart';
@@ -7,6 +8,7 @@ import 'package:llama_inference/src/llama_context.dart';
 import 'package:llama_inference/src/llama_model.dart';
 
 final _log = Logger('LlamaSession');
+final _b = LlamaBindings.instance;
 
 /// High-level session that manages model + context lifecycle.
 ///
@@ -53,6 +55,8 @@ class LlamaSession {
   }) async {
     _log.info('Creating session for model: $modelPath');
 
+    _b.backendInit();
+
     final model = await LlamaModel.load(
       modelPath,
       gpuLayers: gpuLayers,
@@ -89,6 +93,7 @@ class LlamaSession {
     _log.info('Disposing session');
     context.dispose();
     model.dispose();
+    _b.backendFree();
   }
 
   void _assertReady() {
