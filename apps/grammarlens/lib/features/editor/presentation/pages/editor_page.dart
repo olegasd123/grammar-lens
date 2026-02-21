@@ -7,11 +7,15 @@ import 'package:grammarlens_ui/grammarlens_ui.dart';
 import 'package:grammarlens/features/editor/presentation/bloc/editor_bloc.dart';
 import 'package:grammarlens/features/editor/presentation/bloc/editor_event.dart';
 import 'package:grammarlens/features/editor/presentation/bloc/editor_state.dart';
+import 'package:grammarlens/features/editor/presentation/widgets/highlighting_text_controller.dart';
 import 'package:grammarlens/features/editor/presentation/widgets/suggestion_panel.dart';
 import 'package:grammarlens/features/model_manager/presentation/bloc/model_bloc.dart';
 import 'package:grammarlens/features/model_manager/presentation/bloc/model_state.dart';
 import 'package:grammarlens/features/model_manager/presentation/pages/model_manager_page.dart';
 import 'package:grammarlens/features/model_manager/presentation/widgets/model_status_bar.dart';
+import 'package:grammarlens/features/settings/presentation/bloc/settings_bloc.dart';
+import 'package:grammarlens/features/settings/presentation/pages/settings_page.dart';
+import 'package:grammarlens/features/statistics/presentation/pages/statistics_page.dart';
 
 /// Main editor page — the core GrammarLens experience.
 ///
@@ -28,13 +32,13 @@ class EditorPage extends StatefulWidget {
 }
 
 class _EditorPageState extends State<EditorPage> {
-  late final TextEditingController _textController;
+  late final HighlightingTextController _textController;
   EditorBloc? _editorBloc;
 
   @override
   void initState() {
     super.initState();
-    _textController = TextEditingController();
+    _textController = HighlightingTextController();
     // Create initial EditorBloc without analyzer (no model yet)
     _editorBloc = EditorBloc();
   }
@@ -136,6 +140,22 @@ class _EditorPageState extends State<EditorPage> {
               ),
               const SizedBox(width: 8),
 
+              // Statistics button
+              IconButton(
+                onPressed: () {
+                  Navigator.of(context).push(
+                    MaterialPageRoute<void>(
+                      builder: (_) => BlocProvider.value(
+                        value: _editorBloc!,
+                        child: const StatisticsPage(),
+                      ),
+                    ),
+                  );
+                },
+                icon: const Icon(Icons.bar_chart_rounded),
+                tooltip: 'Statistics',
+              ),
+
               // Model manager button
               IconButton(
                 onPressed: () {
@@ -148,8 +168,24 @@ class _EditorPageState extends State<EditorPage> {
                     ),
                   );
                 },
-                icon: const Icon(Icons.settings),
+                icon: const Icon(Icons.memory),
                 tooltip: 'Models',
+              ),
+
+              // Settings button
+              IconButton(
+                onPressed: () {
+                  Navigator.of(context).push(
+                    MaterialPageRoute<void>(
+                      builder: (_) => BlocProvider.value(
+                        value: context.read<SettingsBloc>(),
+                        child: const SettingsPage(),
+                      ),
+                    ),
+                  );
+                },
+                icon: const Icon(Icons.settings),
+                tooltip: 'Settings',
               ),
               const SizedBox(width: 8),
             ],
@@ -207,11 +243,19 @@ class _EditorPageState extends State<EditorPage> {
   }
 
   Widget _buildEditorSection() {
-    return Column(
-      children: [
-        // Stats bar
-        BlocBuilder<EditorBloc, EditorState>(
-          buildWhen: (prev, curr) => prev.statistics != curr.statistics,
+    return BlocListener<EditorBloc, EditorState>(
+      listenWhen: (prev, curr) => prev.corrections != curr.corrections,
+      listener: (context, state) {
+        final active = state.corrections
+            .where((c) => !c.isAccepted && !c.isDismissed)
+            .toList();
+        _textController.updateCorrections(active);
+      },
+      child: Column(
+        children: [
+          // Stats bar
+          BlocBuilder<EditorBloc, EditorState>(
+            buildWhen: (prev, curr) => prev.statistics != curr.statistics,
           builder: (context, state) {
             final stats = state.statistics;
             if (stats == null) return const SizedBox(height: 40);
@@ -286,7 +330,8 @@ class _EditorPageState extends State<EditorPage> {
             ),
           ),
         ),
-      ],
+        ],
+      ),
     );
   }
 

@@ -23,6 +23,7 @@ dependencies:
     path: ../../packages/model_repository
   platform_integration:
     path: ../../packages/platform_integration
+  shared_preferences: ^2.5.4
 
 dev_dependencies:
   bloc_test: ^10.0.0

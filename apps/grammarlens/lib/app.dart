@@ -7,6 +7,9 @@ import 'package:grammarlens/di/injection.dart';
 import 'package:grammarlens/features/editor/presentation/pages/editor_page.dart';
 import 'package:grammarlens/features/model_manager/presentation/bloc/model_bloc.dart';
 import 'package:grammarlens/features/model_manager/presentation/bloc/model_event.dart';
+import 'package:grammarlens/features/settings/presentation/bloc/settings_bloc.dart';
+import 'package:grammarlens/features/settings/presentation/bloc/settings_event.dart';
+import 'package:grammarlens/features/settings/presentation/bloc/settings_state.dart';
 
 /// Root widget for the GrammarLens application.
 class GrammarLensApp extends StatelessWidget {
@@ -14,15 +17,28 @@ class GrammarLensApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return BlocProvider.value(
-      value: getIt<ModelBloc>()..add(const ModelStatusChecked()),
-      child: MaterialApp(
-        title: 'GrammarLens',
-        debugShowCheckedModeBanner: false,
-        theme: AppTheme.light(),
-        darkTheme: AppTheme.dark(),
-        themeMode: ThemeMode.system,
-        home: const EditorPage(),
+    return MultiBlocProvider(
+      providers: [
+        BlocProvider.value(
+          value: getIt<ModelBloc>()..add(const ModelStatusChecked()),
+        ),
+        BlocProvider.value(
+          value: getIt<SettingsBloc>()..add(const SettingsLoaded()),
+        ),
+      ],
+      child: BlocBuilder<SettingsBloc, SettingsState>(
+        buildWhen: (prev, curr) =>
+            prev.preferences.themeMode != curr.preferences.themeMode,
+        builder: (context, settingsState) {
+          return MaterialApp(
+            title: 'GrammarLens',
+            debugShowCheckedModeBanner: false,
+            theme: AppTheme.light(),
+            darkTheme: AppTheme.dark(),
+            themeMode: settingsState.preferences.themeMode,
+            home: const EditorPage(),
+          );
+        },
       ),
     );
   }

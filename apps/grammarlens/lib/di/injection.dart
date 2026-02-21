@@ -1,10 +1,11 @@
 import 'package:get_it/get_it.dart';
 
 import 'package:grammar_engine/grammar_engine.dart';
+import 'package:grammarlens/features/model_manager/presentation/bloc/model_bloc.dart';
+import 'package:grammarlens/features/settings/data/preferences_repository.dart';
+import 'package:grammarlens/features/settings/presentation/bloc/settings_bloc.dart';
 import 'package:model_repository/model_repository.dart';
 import 'package:platform_integration/platform_integration.dart';
-
-import 'package:grammarlens/features/model_manager/presentation/bloc/model_bloc.dart';
 
 /// Global service locator instance.
 final getIt = GetIt.instance;
@@ -41,12 +42,21 @@ Future<void> configureDependencies() async {
     ),
   );
 
+  // ── Settings ──────────────────────────────────────────────────────────
+
+  getIt.registerLazySingleton<PreferencesRepository>(
+    PreferencesRepository.new,
+  );
+  getIt.registerLazySingleton<SettingsBloc>(
+    () => SettingsBloc(repository: getIt<PreferencesRepository>()),
+  );
+
   // ── Platform Services ──────────────────────────────────────────────────
 
   getIt.registerLazySingleton<ClipboardService>(
     () => const ClipboardService(),
   );
   getIt.registerLazySingleton<GlobalHotkeyService>(
-    () => GlobalHotkeyService(),
+    GlobalHotkeyService.new,
   );
 }
