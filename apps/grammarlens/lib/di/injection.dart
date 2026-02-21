@@ -1,6 +1,9 @@
+import 'dart:io';
+
 import 'package:get_it/get_it.dart';
 
 import 'package:grammar_engine/grammar_engine.dart';
+import 'package:grammarlens/features/external_check/presentation/bloc/external_check_bloc.dart';
 import 'package:grammarlens/features/model_manager/presentation/bloc/model_bloc.dart';
 import 'package:grammarlens/features/settings/data/preferences_repository.dart';
 import 'package:grammarlens/features/settings/presentation/bloc/settings_bloc.dart';
@@ -59,4 +62,27 @@ Future<void> configureDependencies() async {
   getIt.registerLazySingleton<GlobalHotkeyService>(
     GlobalHotkeyService.new,
   );
+
+  // ── macOS Accessibility ────────────────────────────────────────────────
+
+  if (Platform.isMacOS) {
+    getIt.registerLazySingleton<MacosAccessibilityChannel>(
+      MacosAccessibilityChannel.new,
+    );
+    getIt.registerLazySingleton<AccessibilityService>(
+      () => MacosAccessibilityService(
+        channel: getIt<MacosAccessibilityChannel>(),
+      ),
+    );
+    getIt.registerLazySingleton<PlatformTextService>(
+      () => MacosPlatformTextService(
+        channel: getIt<MacosAccessibilityChannel>(),
+      ),
+    );
+    getIt.registerLazySingleton<ExternalCheckBloc>(
+      () => ExternalCheckBloc(
+        accessibilityService: getIt<AccessibilityService>(),
+      ),
+    );
+  }
 }

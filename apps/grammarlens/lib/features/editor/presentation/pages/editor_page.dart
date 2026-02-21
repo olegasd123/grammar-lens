@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
@@ -9,6 +11,9 @@ import 'package:grammarlens/features/editor/presentation/bloc/editor_event.dart'
 import 'package:grammarlens/features/editor/presentation/bloc/editor_state.dart';
 import 'package:grammarlens/features/editor/presentation/widgets/highlighting_text_controller.dart';
 import 'package:grammarlens/features/editor/presentation/widgets/suggestion_panel.dart';
+import 'package:grammarlens/features/external_check/presentation/bloc/external_check_bloc.dart';
+import 'package:grammarlens/features/external_check/presentation/bloc/external_check_state.dart';
+import 'package:grammarlens/features/external_check/presentation/pages/external_check_panel.dart';
 import 'package:grammarlens/features/model_manager/presentation/bloc/model_bloc.dart';
 import 'package:grammarlens/features/model_manager/presentation/bloc/model_state.dart';
 import 'package:grammarlens/features/model_manager/presentation/pages/model_manager_page.dart';
@@ -96,18 +101,35 @@ class _EditorPageState extends State<EditorPage> {
 
   @override
   Widget build(BuildContext context) {
-    return BlocListener<ModelBloc, ModelState>(
-      listenWhen: (prev, curr) => prev.status != curr.status,
-      listener: (context, modelState) {
-        if (modelState.status == ModelStatus.ready) {
-          _onModelReady(context.read<ModelBloc>());
-        } else if (modelState.status == ModelStatus.noModel ||
-            modelState.status == ModelStatus.error) {
-          if (_editorBloc?.state.status == AnalysisStatus.analyzing) {
-            _onModelUnloaded();
-          }
-        }
-      },
+    return MultiBlocListener(
+      listeners: [
+        BlocListener<ModelBloc, ModelState>(
+          listenWhen: (prev, curr) => prev.status != curr.status,
+          listener: (context, modelState) {
+            if (modelState.status == ModelStatus.ready) {
+              _onModelReady(context.read<ModelBloc>());
+            } else if (modelState.status == ModelStatus.noModel ||
+                modelState.status == ModelStatus.error) {
+              if (_editorBloc?.state.status == AnalysisStatus.analyzing) {
+                _onModelUnloaded();
+              }
+            }
+          },
+        ),
+        if (Platform.isMacOS)
+          BlocListener<ExternalCheckBloc, ExternalCheckState>(
+            listenWhen: (prev, curr) =>
+                curr.status == ExternalCheckStatus.loading ||
+                curr.status == ExternalCheckStatus.ready ||
+                curr.status == ExternalCheckStatus.noPermission ||
+                curr.status == ExternalCheckStatus.error,
+            listener: (context, state) {
+              if (state.status != ExternalCheckStatus.initial) {
+                ExternalCheckPanel.show(context);
+              }
+            },
+          ),
+      ],
       child: BlocProvider.value(
         value: _editorBloc!,
         child: Scaffold(

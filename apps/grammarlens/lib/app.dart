@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
@@ -5,6 +7,7 @@ import 'package:grammarlens_ui/grammarlens_ui.dart';
 
 import 'package:grammarlens/di/injection.dart';
 import 'package:grammarlens/features/editor/presentation/pages/editor_page.dart';
+import 'package:grammarlens/features/external_check/presentation/bloc/external_check_bloc.dart';
 import 'package:grammarlens/features/model_manager/presentation/bloc/model_bloc.dart';
 import 'package:grammarlens/features/model_manager/presentation/bloc/model_event.dart';
 import 'package:grammarlens/features/settings/presentation/bloc/settings_bloc.dart';
@@ -25,6 +28,10 @@ class GrammarLensApp extends StatelessWidget {
         BlocProvider.value(
           value: getIt<SettingsBloc>()..add(const SettingsLoaded()),
         ),
+        if (Platform.isMacOS)
+          BlocProvider.value(
+            value: getIt<ExternalCheckBloc>(),
+          ),
       ],
       child: BlocBuilder<SettingsBloc, SettingsState>(
         buildWhen: (prev, curr) =>
