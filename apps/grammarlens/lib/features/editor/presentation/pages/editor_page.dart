@@ -1,17 +1,21 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+import 'package:grammar_engine/grammar_engine.dart';
 import 'package:grammarlens_ui/grammarlens_ui.dart';
 
 import 'package:grammarlens/features/editor/presentation/bloc/editor_bloc.dart';
 import 'package:grammarlens/features/editor/presentation/bloc/editor_event.dart';
 import 'package:grammarlens/features/editor/presentation/bloc/editor_state.dart';
-import 'package:grammarlens/features/editor/presentation/widgets/correction_card.dart';
 import 'package:grammarlens/features/editor/presentation/widgets/suggestion_panel.dart';
+import 'package:grammarlens/features/model_manager/presentation/bloc/model_bloc.dart';
+import 'package:grammarlens/features/model_manager/presentation/bloc/model_state.dart';
+import 'package:grammarlens/features/model_manager/presentation/widgets/model_status_bar.dart';
 
 /// Main editor page — the core GrammarLens experience.
 ///
 /// Layout:
+/// - Top: Model status bar (when no model loaded)
 /// - Top: Toolbar with language selector, stats, and status
 /// - Center: Text editor
 /// - Right/Bottom: Suggestion panel with corrections
@@ -24,93 +28,161 @@ class EditorPage extends StatefulWidget {
 
 class _EditorPageState extends State<EditorPage> {
   late final TextEditingController _textController;
-  late final EditorBloc _editorBloc;
+  EditorBloc? _editorBloc;
 
   @override
   void initState() {
     super.initState();
     _textController = TextEditingController();
+    // Create initial EditorBloc without analyzer (no model yet)
     _editorBloc = EditorBloc();
   }
 
   @override
   void dispose() {
     _textController.dispose();
-    _editorBloc.close();
+    _editorBloc?.close();
     super.dispose();
+  }
+
+  /// Rebuild the EditorBloc with a working GrammarAnalyzer once the model
+  /// is ready. Preserves the current text.
+  void _onModelReady(ModelBloc modelBloc) {
+    final engine = modelBloc.engine;
+    if (engine == null) return;
+
+    final currentText = _editorBloc?.state.text ?? '';
+    final currentLanguage = _editorBloc?.state.selectedLanguage;
+
+    _editorBloc?.close();
+
+    final analyzer = GrammarAnalyzer(
+      onInfer: (prompt) async {
+        final result = await engine.complete(prompt);
+        return result.text;
+      },
+    );
+
+    _editorBloc = EditorBloc(analyzer: analyzer);
+
+    // Restore text and trigger re-analysis
+    if (currentText.isNotEmpty) {
+      _editorBloc!.add(TextChanged(text: currentText));
+      if (currentLanguage != null) {
+        _editorBloc!.add(LanguageChanged(languageCode: currentLanguage));
+      }
+    }
+
+    setState(() {});
+  }
+
+  /// When model is unloaded, recreate bloc without analyzer.
+  void _onModelUnloaded() {
+    final currentText = _editorBloc?.state.text ?? '';
+    _editorBloc?.close();
+    _editorBloc = EditorBloc();
+
+    if (currentText.isNotEmpty) {
+      _editorBloc!.add(TextChanged(text: currentText));
+    }
+
+    setState(() {});
   }
 
   @override
   Widget build(BuildContext context) {
-    return BlocProvider.value(
-      value: _editorBloc,
-      child: Scaffold(
-        appBar: AppBar(
-          title: const Text('GrammarLens'),
-          actions: [
-            // Language selector
-            BlocBuilder<EditorBloc, EditorState>(
-              buildWhen: (prev, curr) =>
-                  prev.effectiveLanguage != curr.effectiveLanguage,
-              builder: (context, state) {
-                return LanguageSelector(
-                  selectedCode: state.selectedLanguage ?? 'auto',
-                  onChanged: (code) {
-                    _editorBloc.add(LanguageChanged(
-                      languageCode: code == 'auto' ? 'en' : code,
-                    ));
+    return BlocListener<ModelBloc, ModelState>(
+      listenWhen: (prev, curr) => prev.status != curr.status,
+      listener: (context, modelState) {
+        if (modelState.status == ModelStatus.ready) {
+          _onModelReady(context.read<ModelBloc>());
+        } else if (modelState.status == ModelStatus.noModel ||
+            modelState.status == ModelStatus.error) {
+          if (_editorBloc?.state.status == AnalysisStatus.analyzing) {
+            _onModelUnloaded();
+          }
+        }
+      },
+      child: BlocProvider.value(
+        value: _editorBloc!,
+        child: Scaffold(
+          appBar: AppBar(
+            title: const Text('GrammarLens'),
+            actions: [
+              // Language selector
+              BlocBuilder<EditorBloc, EditorState>(
+                buildWhen: (prev, curr) =>
+                    prev.effectiveLanguage != curr.effectiveLanguage,
+                builder: (context, state) {
+                  return LanguageSelector(
+                    selectedCode: state.selectedLanguage ?? 'auto',
+                    onChanged: (code) {
+                      _editorBloc!.add(LanguageChanged(
+                        languageCode: code == 'auto' ? 'en' : code,
+                      ));
+                    },
+                  );
+                },
+              ),
+              const SizedBox(width: 8),
+
+              // Analysis status indicator
+              BlocBuilder<EditorBloc, EditorState>(
+                buildWhen: (prev, curr) => prev.status != curr.status,
+                builder: (context, state) {
+                  return _StatusIndicator(status: state.status);
+                },
+              ),
+              const SizedBox(width: 16),
+            ],
+          ),
+          body: Column(
+            children: [
+              // Model status bar (shown when model not ready)
+              const ModelStatusBar(),
+
+              // Main content
+              Expanded(
+                child: LayoutBuilder(
+                  builder: (context, constraints) {
+                    final isWide = constraints.maxWidth > 900;
+
+                    if (isWide) {
+                      // Desktop layout: editor on left, suggestions on right
+                      return Row(
+                        children: [
+                          Expanded(
+                            flex: 3,
+                            child: _buildEditorSection(),
+                          ),
+                          const VerticalDivider(width: 1),
+                          Expanded(
+                            flex: 1,
+                            child: _buildSuggestionSection(),
+                          ),
+                        ],
+                      );
+                    } else {
+                      // Mobile layout: editor on top, suggestions below
+                      return Column(
+                        children: [
+                          Expanded(
+                            flex: 3,
+                            child: _buildEditorSection(),
+                          ),
+                          const Divider(height: 1),
+                          Expanded(
+                            flex: 1,
+                            child: _buildSuggestionSection(),
+                          ),
+                        ],
+                      );
+                    }
                   },
-                );
-              },
-            ),
-            const SizedBox(width: 8),
-
-            // Analysis status indicator
-            BlocBuilder<EditorBloc, EditorState>(
-              buildWhen: (prev, curr) => prev.status != curr.status,
-              builder: (context, state) {
-                return _StatusIndicator(status: state.status);
-              },
-            ),
-            const SizedBox(width: 16),
-          ],
-        ),
-        body: LayoutBuilder(
-          builder: (context, constraints) {
-            final isWide = constraints.maxWidth > 900;
-
-            if (isWide) {
-              // Desktop layout: editor on left, suggestions on right
-              return Row(
-                children: [
-                  Expanded(
-                    flex: 3,
-                    child: _buildEditorSection(),
-                  ),
-                  const VerticalDivider(width: 1),
-                  Expanded(
-                    flex: 1,
-                    child: _buildSuggestionSection(),
-                  ),
-                ],
-              );
-            } else {
-              // Mobile layout: editor on top, suggestions below
-              return Column(
-                children: [
-                  Expanded(
-                    flex: 3,
-                    child: _buildEditorSection(),
-                  ),
-                  const Divider(height: 1),
-                  Expanded(
-                    flex: 1,
-                    child: _buildSuggestionSection(),
-                  ),
-                ],
-              );
-            }
-          },
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -156,7 +228,7 @@ class _EditorPageState extends State<EditorPage> {
                       }
                       return TextButton.icon(
                         onPressed: () {
-                          _editorBloc.add(const AcceptAllCorrections());
+                          _editorBloc!.add(const AcceptAllCorrections());
                         },
                         icon: const Icon(Icons.done_all, size: 18),
                         label: Text(
@@ -191,7 +263,7 @@ class _EditorPageState extends State<EditorPage> {
                 focusedBorder: InputBorder.none,
               ),
               onChanged: (text) {
-                _editorBloc.add(TextChanged(text: text));
+                _editorBloc!.add(TextChanged(text: text));
               },
             ),
           ),
@@ -208,12 +280,12 @@ class _EditorPageState extends State<EditorPage> {
               .where((c) => !c.isAccepted && !c.isDismissed)
               .toList(),
           onAccept: (correction) {
-            _editorBloc.add(CorrectionAccepted(correction: correction));
+            _editorBloc!.add(CorrectionAccepted(correction: correction));
             // Update text controller
-            _textController.text = _editorBloc.state.text;
+            _textController.text = _editorBloc!.state.text;
           },
           onDismiss: (correction) {
-            _editorBloc.add(CorrectionDismissed(correction: correction));
+            _editorBloc!.add(CorrectionDismissed(correction: correction));
           },
         );
       },

@@ -4,6 +4,8 @@ import 'package:grammar_engine/grammar_engine.dart';
 import 'package:model_repository/model_repository.dart';
 import 'package:platform_integration/platform_integration.dart';
 
+import 'package:grammarlens/features/model_manager/presentation/bloc/model_bloc.dart';
+
 /// Global service locator instance.
 final getIt = GetIt.instance;
 
@@ -29,9 +31,15 @@ Future<void> configureDependencies() async {
     () => const TextStatisticsCalculator(),
   );
 
-  // GrammarAnalyzer will be registered after a model is loaded,
-  // since it needs the inference callback.
-  // See EditorBloc for how this is wired up.
+  // ── Model Manager ──────────────────────────────────────────────────────
+
+  getIt.registerLazySingleton<ModelBloc>(
+    () => ModelBloc(
+      registry: getIt<ModelRegistry>(),
+      storage: getIt<ModelStorage>(),
+      downloader: getIt<ModelDownloader>(),
+    ),
+  );
 
   // ── Platform Services ──────────────────────────────────────────────────
 
