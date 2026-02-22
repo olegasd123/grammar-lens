@@ -43,7 +43,8 @@ class ModelManifest {
 
   /// Bundled manifest with placeholder entries.
   ///
-  /// In production, download URLs and checksums will point to the CDN.
+  /// In production, the publish_models.sh script replaces placeholder hashes
+  /// and URLs with real values from GitHub Releases.
   static const bundledManifestJson = {
     'version': 1,
     'models': [
@@ -53,9 +54,9 @@ class ModelManifest {
         'language': 'en',
         'quantization': 'Q4_K_M',
         'fileSizeBytes': 2300000000,
-        'sha256': 'placeholder-sha256-en-q4km',
+        'sha256': 'placeholder',
         'downloadUrl':
-            'https://cdn.grammarlens.app/models/phi3-mini-grammar-en-q4km-v1.gguf',
+            'https://github.com/grammarlens/grammarlens/releases/download/models-v1/phi3-mini-grammar-en-q4km.gguf',
         'minAppVersion': '0.1.0',
         'contextLength': 4096,
       },
@@ -65,9 +66,9 @@ class ModelManifest {
         'language': 'en',
         'quantization': 'Q5_K_M',
         'fileSizeBytes': 2800000000,
-        'sha256': 'placeholder-sha256-en-q5km',
+        'sha256': 'placeholder',
         'downloadUrl':
-            'https://cdn.grammarlens.app/models/phi3-mini-grammar-en-q5km-v1.gguf',
+            'https://github.com/grammarlens/grammarlens/releases/download/models-v1/phi3-mini-grammar-en-q5km.gguf',
         'minAppVersion': '0.1.0',
         'contextLength': 4096,
       },
@@ -77,9 +78,9 @@ class ModelManifest {
         'language': 'es',
         'quantization': 'Q4_K_M',
         'fileSizeBytes': 2300000000,
-        'sha256': 'placeholder-sha256-es-q4km',
+        'sha256': 'placeholder',
         'downloadUrl':
-            'https://cdn.grammarlens.app/models/phi3-mini-grammar-es-q4km-v1.gguf',
+            'https://github.com/grammarlens/grammarlens/releases/download/models-v1/phi3-mini-grammar-es-q4km.gguf',
         'minAppVersion': '0.1.0',
         'contextLength': 4096,
       },
@@ -89,9 +90,9 @@ class ModelManifest {
         'language': 'fr',
         'quantization': 'Q4_K_M',
         'fileSizeBytes': 2300000000,
-        'sha256': 'placeholder-sha256-fr-q4km',
+        'sha256': 'placeholder',
         'downloadUrl':
-            'https://cdn.grammarlens.app/models/phi3-mini-grammar-fr-q4km-v1.gguf',
+            'https://github.com/grammarlens/grammarlens/releases/download/models-v1/phi3-mini-grammar-fr-q4km.gguf',
         'minAppVersion': '0.1.0',
         'contextLength': 4096,
       },
@@ -101,9 +102,9 @@ class ModelManifest {
         'language': 'de',
         'quantization': 'Q4_K_M',
         'fileSizeBytes': 2300000000,
-        'sha256': 'placeholder-sha256-de-q4km',
+        'sha256': 'placeholder',
         'downloadUrl':
-            'https://cdn.grammarlens.app/models/phi3-mini-grammar-de-q4km-v1.gguf',
+            'https://github.com/grammarlens/grammarlens/releases/download/models-v1/phi3-mini-grammar-de-q4km.gguf',
         'minAppVersion': '0.1.0',
         'contextLength': 4096,
       },
@@ -113,9 +114,9 @@ class ModelManifest {
         'language': 'pt',
         'quantization': 'Q4_K_M',
         'fileSizeBytes': 2300000000,
-        'sha256': 'placeholder-sha256-pt-q4km',
+        'sha256': 'placeholder',
         'downloadUrl':
-            'https://cdn.grammarlens.app/models/phi3-mini-grammar-pt-q4km-v1.gguf',
+            'https://github.com/grammarlens/grammarlens/releases/download/models-v1/phi3-mini-grammar-pt-q4km.gguf',
         'minAppVersion': '0.1.0',
         'contextLength': 4096,
       },

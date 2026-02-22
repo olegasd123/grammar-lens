@@ -15,10 +15,13 @@ class MockModelStorage extends Mock implements ModelStorage {}
 
 class MockModelDownloader extends Mock implements ModelDownloader {}
 
+class MockModelManifestFetcher extends Mock implements ModelManifestFetcher {}
+
 void main() {
   late MockModelRegistry mockRegistry;
   late MockModelStorage mockStorage;
   late MockModelDownloader mockDownloader;
+  late MockModelManifestFetcher mockManifestFetcher;
   late Directory tempDir;
 
   const testModel = ModelInfo(
@@ -27,7 +30,7 @@ void main() {
     language: 'en',
     quantization: 'Q4_K_M',
     fileSizeBytes: 2300000000,
-    sha256: 'abc123',
+    sha256: 'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855',
     downloadUrl: 'https://example.com/model.gguf',
     minAppVersion: '0.1.0',
     contextLength: 4096,
@@ -37,7 +40,11 @@ void main() {
     mockRegistry = MockModelRegistry();
     mockStorage = MockModelStorage();
     mockDownloader = MockModelDownloader();
+    mockManifestFetcher = MockModelManifestFetcher();
     tempDir = Directory.systemTemp.createTempSync('model_bloc_test_');
+    when(() => mockManifestFetcher.fetchManifest()).thenAnswer(
+      (_) async => ModelManifest.fromJson(ModelManifest.bundledManifestJson),
+    );
   });
 
   tearDown(() {
@@ -50,6 +57,7 @@ void main() {
         registry: mockRegistry,
         storage: mockStorage,
         downloader: mockDownloader,
+        manifestFetcher: mockManifestFetcher,
       );
 
   group('ModelBloc', () {
@@ -108,6 +116,13 @@ void main() {
         },
         build: buildBloc,
         act: (bloc) => bloc.add(const ModelStatusChecked()),
+        expect: () => [
+          isA<ModelState>().having(
+            (s) => s.status,
+            'status',
+            ModelStatus.noModel,
+          ),
+        ],
         verify: (bloc) {
           expect(
             bloc.state.installedModelIds,
@@ -168,8 +183,7 @@ void main() {
           status: ModelStatus.noModel,
           installedModelIds: {testModel.id, 'other-model'},
         ),
-        act: (bloc) =>
-            bloc.add(const ModelDeleteRequested(model: testModel)),
+        act: (bloc) => bloc.add(const ModelDeleteRequested(model: testModel)),
         verify: (bloc) {
           expect(
             bloc.state.installedModelIds,
@@ -198,8 +212,7 @@ void main() {
           activeModel: testModel,
           installedModelIds: {testModel.id},
         ),
-        act: (bloc) =>
-            bloc.add(const ModelDeleteRequested(model: testModel)),
+        act: (bloc) => bloc.add(const ModelDeleteRequested(model: testModel)),
         expect: () => [
           isA<ModelState>()
               .having((s) => s.status, 'status', ModelStatus.noModel)
@@ -217,27 +230,33 @@ void main() {
       blocTest<ModelBloc, ModelState>(
         'emits downloading status on start',
         setUp: () {
+          var getModelPathCalls = 0;
           when(() => mockStorage.getModelPath(testModel.id))
-              .thenAnswer((_) async => '${tempDir.path}/model.gguf');
+              .thenAnswer((_) async {
+            getModelPathCalls += 1;
+            if (getModelPathCalls == 1) {
+              return '${tempDir.path}/model.gguf';
+            }
+            throw StateError('Model load is not part of this test');
+          });
           when(() => mockDownloader.download(
                 testModel,
                 any(),
                 onProgress: any(named: 'onProgress'),
               )).thenAnswer((_) async {
-            return File('${tempDir.path}/model.gguf');
+            final file = File('${tempDir.path}/model.gguf');
+            await file.writeAsBytes(const []);
+            return file;
           });
           when(() => mockRegistry.registerModel(testModel))
               .thenAnswer((_) async {});
-          // For the auto-load that follows download, mock the load path
-          when(() => mockStorage.getModelPath(testModel.id))
-              .thenAnswer((_) async => '${tempDir.path}/model.gguf');
           when(
             () => mockRegistry.setActiveModel(testModel.language, testModel.id),
           ).thenAnswer((_) async {});
         },
         build: buildBloc,
-        act: (bloc) =>
-            bloc.add(const ModelDownloadRequested(model: testModel)),
+        act: (bloc) => bloc.add(const ModelDownloadRequested(model: testModel)),
+        wait: const Duration(milliseconds: 50),
         verify: (bloc) {
           verify(() => mockDownloader.download(
                 testModel,
@@ -262,8 +281,7 @@ void main() {
           );
         },
         build: buildBloc,
-        act: (bloc) =>
-            bloc.add(const ModelDownloadRequested(model: testModel)),
+        act: (bloc) => bloc.add(const ModelDownloadRequested(model: testModel)),
         expect: () => [
           // downloading
           isA<ModelState>().having(

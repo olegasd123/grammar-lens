@@ -19,6 +19,7 @@ class ModelBloc extends Bloc<ModelEvent, ModelState> {
   final ModelRegistry _registry;
   final ModelStorage _storage;
   final ModelDownloader _downloader;
+  final ModelManifestFetcher _manifestFetcher;
 
   /// The active inference engine. Non-null when [state.isReady].
   IsolateInference? _engine;
@@ -30,9 +31,11 @@ class ModelBloc extends Bloc<ModelEvent, ModelState> {
     required ModelRegistry registry,
     required ModelStorage storage,
     required ModelDownloader downloader,
+    ModelManifestFetcher? manifestFetcher,
   })  : _registry = registry,
         _storage = storage,
         _downloader = downloader,
+        _manifestFetcher = manifestFetcher ?? ModelManifestFetcher(),
         super(const ModelState()) {
     on<ModelStatusChecked>(_onStatusChecked);
     on<ModelLoadRequested>(_onLoadRequested);
@@ -49,10 +52,8 @@ class ModelBloc extends Bloc<ModelEvent, ModelState> {
     _log.info('Checking model status');
 
     try {
-      // Load manifest
-      final manifest = ModelManifest.fromJson(
-        ModelManifest.bundledManifestJson,
-      );
+      // Fetch latest manifest (falls back to bundled on network failure)
+      final manifest = await _manifestFetcher.fetchManifest();
 
       // Check which models are installed
       final installedIds = <String>{};
@@ -66,9 +67,7 @@ class ModelBloc extends Bloc<ModelEvent, ModelState> {
       final activeModel = await _registry.getActiveModel('en');
 
       emit(state.copyWith(
-        status: activeModel != null && installedIds.contains(activeModel.id)
-            ? ModelStatus.noModel // Has installed model but needs loading
-            : ModelStatus.noModel,
+        status: ModelStatus.noModel,
         availableModels: manifest.models,
         installedModelIds: installedIds,
       ));
@@ -166,6 +165,34 @@ class ModelBloc extends Bloc<ModelEvent, ModelState> {
         },
       );
 
+      // Verify integrity (skip for placeholder hashes during development)
+      if (!event.model.sha256.startsWith('placeholder')) {
+        emit(state.copyWith(status: ModelStatus.verifying));
+        _log.info('Verifying checksum for ${event.model.id}');
+
+        final valid = await ModelIntegrity.verifyChecksum(
+          destPath,
+          event.model.sha256,
+        );
+
+        if (!valid) {
+          _log.severe('Checksum mismatch for ${event.model.id}');
+          await _storage.deleteModel(event.model.id);
+          emit(state.copyWith(
+            status: ModelStatus.error,
+            errorMessage:
+                'Integrity check failed for ${event.model.displayName}. '
+                'The file may be corrupted. Please try again.',
+          ));
+          return;
+        }
+      } else {
+        _log.warning(
+          'Skipping checksum verification (placeholder hash) '
+          'for ${event.model.id}',
+        );
+      }
+
       // Register the model
       await _registry.registerModel(event.model);
 
@@ -227,6 +254,7 @@ class ModelBloc extends Bloc<ModelEvent, ModelState> {
   @override
   Future<void> close() {
     _engine?.dispose();
+    _manifestFetcher.dispose();
     return super.close();
   }
 }

@@ -11,6 +11,9 @@ enum ModelStatus {
   /// A model is being downloaded.
   downloading,
 
+  /// A downloaded model is being verified (SHA-256 checksum).
+  verifying,
+
   /// A model is being loaded into memory.
   loading,
 

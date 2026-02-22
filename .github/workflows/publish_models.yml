@@ -1,0 +1,60 @@
+name: Publish Models
+
+on:
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Release tag (e.g., models-v1)'
+        required: true
+        type: string
+      models_artifact:
+        description: 'Name of artifact containing .gguf files (from a prior workflow run)'
+        required: false
+        type: string
+
+jobs:
+  publish:
+    name: Publish Models to GitHub Releases
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Download model artifact
+        if: inputs.models_artifact != ''
+        uses: actions/download-artifact@v4
+        with:
+          name: ${{ inputs.models_artifact }}
+          path: ./model_files
+
+      - name: Verify model files exist
+        run: |
+          MODELS_DIR="${MODELS_DIR:-./model_files}"
+          if [ ! -d "$MODELS_DIR" ]; then
+            echo "Error: Models directory not found at $MODELS_DIR"
+            echo "Either provide a models_artifact input or place .gguf files in ./model_files/"
+            exit 1
+          fi
+          count=$(find "$MODELS_DIR" -maxdepth 1 -name '*.gguf' | wc -l)
+          if [ "$count" -eq 0 ]; then
+            echo "Error: No .gguf files found in $MODELS_DIR"
+            exit 1
+          fi
+          echo "Found $count model file(s)"
+
+      - name: Publish models
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          ./scripts/publish_models.sh ./model_files "${{ inputs.tag }}"
+
+      - name: Commit updated manifests
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add models/manifest.json packages/model_repository/lib/src/model_manifest.dart
+          git diff --cached --quiet && echo "No manifest changes to commit" && exit 0
+          git commit -m "Update model manifest for ${{ inputs.tag }}"
+          git push

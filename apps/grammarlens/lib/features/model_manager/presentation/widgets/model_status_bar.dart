@@ -25,6 +25,7 @@ class ModelStatusBar extends StatelessWidget {
           ModelStatus.ready => const SizedBox.shrink(),
           ModelStatus.noModel => _NoModelBanner(state: state),
           ModelStatus.downloading => _DownloadingBanner(state: state),
+          ModelStatus.verifying => const _VerifyingBanner(),
           ModelStatus.loading => const _LoadingBanner(),
           ModelStatus.error => _ErrorBanner(message: state.errorMessage),
         };
@@ -130,6 +131,30 @@ class _DownloadingBanner extends StatelessWidget {
               minHeight: 4,
             ),
           ),
+        ],
+      ),
+    );
+  }
+}
+
+class _VerifyingBanner extends StatelessWidget {
+  const _VerifyingBanner();
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      color: AppColors.styleBlue.withValues(alpha: 0.08),
+      child: const Row(
+        children: [
+          SizedBox(
+            width: 16,
+            height: 16,
+            child: CircularProgressIndicator(strokeWidth: 2),
+          ),
+          SizedBox(width: 12),
+          Text('Verifying model integrity...'),
         ],
       ),
     );
