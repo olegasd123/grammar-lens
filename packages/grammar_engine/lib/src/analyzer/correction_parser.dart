@@ -58,7 +58,14 @@ class CorrectionParser {
     if (offsetStr != null) {
       final parsed = int.tryParse(offsetStr.trim());
       if (parsed != null) {
-        startOffset = baseOffset + parsed;
+        // Validate the offset is within the bounds of the input text
+        final totalTextLength =
+            sentences.fold<int>(0, (sum, s) => sum + s.text.length);
+        if (parsed >= 0 && parsed < totalTextLength) {
+          startOffset = baseOffset + parsed;
+        } else {
+          startOffset = _findOffsetByText(original, sentences, baseOffset);
+        }
       } else {
         startOffset = _findOffsetByText(original, sentences, baseOffset);
       }
