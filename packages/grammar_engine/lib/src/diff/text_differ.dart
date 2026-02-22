@@ -77,69 +77,144 @@ class TextDiffer {
   }
 
   /// Myers diff algorithm on character sequences.
+  ///
+  /// Implements the O(ND) algorithm from Eugene Myers' 1986 paper:
+  /// "An O(ND) Difference Algorithm and Its Variations".
+  ///
+  /// N = n + m (total length), D = edit distance (number of
+  /// insertions + deletions). For similar texts D is small, making
+  /// this much faster than the O(n·m) LCS approach.
   static List<DiffSegment> _myersDiff(String a, String b) {
     final n = a.length;
     final m = b.length;
-    final max = n + m;
 
-    if (max == 0) return [];
+    if (n == 0 && m == 0) return [];
 
-    // For short strings, use simple LCS approach
-    if (n * m < 10000) {
-      return _simpleDiff(a, b);
+    if (n == 0) {
+      return [DiffSegment(operation: DiffOperation.insert, text: b)];
     }
 
-    // For longer strings, use the full Myers algorithm
-    return _simpleDiff(a, b); // TODO: Implement full Myers for O(ND)
-  }
+    if (m == 0) {
+      return [DiffSegment(operation: DiffOperation.delete, text: a)];
+    }
 
-  /// Simple LCS-based diff for short strings.
-  static List<DiffSegment> _simpleDiff(String a, String b) {
-    final n = a.length;
-    final m = b.length;
+    // ── Forward pass: find the shortest edit distance D ────────────────
+    //
+    // v[k] holds the furthest-reaching x position on diagonal k,
+    // where diagonal k is defined as x − y = k.
+    //
+    // We use an offset so that negative k values map to valid indices:
+    //   v[k + offset] ↔ logical diagonal k.
+    //
+    // trace[d] stores v *after* processing step d, so that
+    // trace[d-1] gives the state we came from when backtracking step d.
 
-    // Build LCS table
-    final dp = List.generate(
-      n + 1,
-      (_) => List.filled(m + 1, 0),
-    );
+    final max = n + m;
+    final offset = max;
 
-    for (var i = 1; i <= n; i++) {
-      for (var j = 1; j <= m; j++) {
-        if (a[i - 1] == b[j - 1]) {
-          dp[i][j] = dp[i - 1][j - 1] + 1;
+    final v = List<int>.filled(2 * max + 1, 0);
+    final trace = <List<int>>[];
+
+    outer:
+    for (var d = 0; d <= max; d++) {
+      for (var k = -d; k <= d; k += 2) {
+        // Pick the better predecessor: move down (insert) or right (delete).
+        int x;
+        if (k == -d || (k != d && v[k - 1 + offset] < v[k + 1 + offset])) {
+          x = v[k + 1 + offset]; // move down → insert from b
         } else {
-          dp[i][j] = math.max(dp[i - 1][j], dp[i][j - 1]);
+          x = v[k - 1 + offset] + 1; // move right → delete from a
+        }
+
+        var y = x - k;
+
+        // Follow the diagonal (snake) — matching characters are free.
+        while (x < n && y < m && a[x] == b[y]) {
+          x++;
+          y++;
+        }
+
+        v[k + offset] = x;
+
+        if (x >= n && y >= m) {
+          // Save final state and stop.
+          trace.add(List<int>.from(v));
+          break outer;
         }
       }
+
+      // Snapshot v *after* this step.
+      trace.add(List<int>.from(v));
     }
 
-    // Backtrack to build diff
-    final segments = <DiffSegment>[];
-    var i = n;
-    var j = m;
+    // ── Backtrack: reconstruct the edit script ─────────────────────────
+    //
+    // Walk backward from (n, m) through each step d = D, D-1, …, 1.
+    // At each step we undo one edit (insert or delete) and the diagonal
+    // snake that followed it.
 
-    while (i > 0 || j > 0) {
-      if (i > 0 && j > 0 && a[i - 1] == b[j - 1]) {
+    final segments = <DiffSegment>[];
+    var x = n;
+    var y = m;
+
+    for (var d = trace.length - 1; d >= 1; d--) {
+      final k = x - y;
+      final vPrev = trace[d - 1]; // v after step d-1
+
+      // Which diagonal did step d come from?
+      int prevK;
+      if (k == -d || (k != d && vPrev[k - 1 + offset] < vPrev[k + 1 + offset])) {
+        prevK = k + 1; // insert (moved down)
+      } else {
+        prevK = k - 1; // delete (moved right)
+      }
+
+      final prevX = vPrev[prevK + offset];
+      final prevY = prevX - prevK;
+
+      // The edit moved from (prevX, prevY) to a mid-point; the snake
+      // then ran from the mid-point to (x, y).
+      //   insert → mid = (prevX,     prevY + 1)
+      //   delete → mid = (prevX + 1, prevY    )
+      final midX = prevK < k ? prevX + 1 : prevX;
+      final midY = prevK > k ? prevY + 1 : prevY;
+
+      // Emit the snake (equal characters) in reverse.
+      while (x > midX && y > midY) {
+        x--;
+        y--;
         segments.add(DiffSegment(
           operation: DiffOperation.equal,
-          text: a[i - 1],
+          text: a[x],
         ));
-        i--;
-        j--;
-      } else if (j > 0 && (i == 0 || dp[i][j - 1] >= dp[i - 1][j])) {
+      }
+
+      // Emit the edit.
+      if (prevK > k) {
+        // Insert: y decreased by 1.
+        y--;
         segments.add(DiffSegment(
           operation: DiffOperation.insert,
-          text: b[j - 1],
+          text: b[y],
         ));
-        j--;
       } else {
+        // Delete: x decreased by 1.
+        x--;
         segments.add(DiffSegment(
           operation: DiffOperation.delete,
-          text: a[i - 1],
+          text: a[x],
         ));
-        i--;
       }
+    }
+
+    // Remaining diagonal from the initial snake at step 0.
+    while (x > 0 && y > 0) {
+      x--;
+      y--;
+      segments.add(DiffSegment(
+        operation: DiffOperation.equal,
+        text: a[x],
+      ));
     }
 
     return _mergeSegments(segments.reversed.toList());
