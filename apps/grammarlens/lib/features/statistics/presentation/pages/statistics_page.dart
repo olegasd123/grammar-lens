@@ -15,6 +15,8 @@ class StatisticsPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('Statistics'),
@@ -30,20 +32,20 @@ class StatisticsPage extends StatelessWidget {
                   Icon(
                     Icons.bar_chart_rounded,
                     size: 64,
-                    color: AppColors.textTertiary.withValues(alpha: 0.4),
+                    color: colorScheme.onSurfaceVariant.withValues(alpha: 0.4),
                   ),
                   const SizedBox(height: 16),
                   Text(
                     'No text to analyze',
                     style: AppTypography.bodyLarge.copyWith(
-                      color: AppColors.textSecondary,
+                      color: colorScheme.onSurfaceVariant,
                     ),
                   ),
                   const SizedBox(height: 4),
                   Text(
                     'Type something in the editor to see statistics.',
                     style: AppTypography.bodySmall.copyWith(
-                      color: AppColors.textTertiary,
+                      color: colorScheme.onSurfaceVariant,
                     ),
                   ),
                 ],
@@ -60,46 +62,50 @@ class StatisticsPage extends StatelessWidget {
               // Counts section
               const _SectionHeader(title: 'Counts'),
               const SizedBox(height: 8),
-              _MetricGrid(children: [
-                _MetricCard(
-                  label: 'Words',
-                  value: '${stats.wordCount}',
-                  icon: Icons.text_fields,
-                ),
-                _MetricCard(
-                  label: 'Characters',
-                  value: '${stats.characterCount}',
-                  icon: Icons.abc,
-                ),
-                _MetricCard(
-                  label: 'Sentences',
-                  value: '${stats.sentenceCount}',
-                  icon: Icons.short_text,
-                ),
-                _MetricCard(
-                  label: 'Paragraphs',
-                  value: '${stats.paragraphCount}',
-                  icon: Icons.view_headline,
-                ),
-              ],),
+              _MetricGrid(
+                children: [
+                  _MetricCard(
+                    label: 'Words',
+                    value: '${stats.wordCount}',
+                    icon: Icons.text_fields,
+                  ),
+                  _MetricCard(
+                    label: 'Characters',
+                    value: '${stats.characterCount}',
+                    icon: Icons.abc,
+                  ),
+                  _MetricCard(
+                    label: 'Sentences',
+                    value: '${stats.sentenceCount}',
+                    icon: Icons.short_text,
+                  ),
+                  _MetricCard(
+                    label: 'Paragraphs',
+                    value: '${stats.paragraphCount}',
+                    icon: Icons.view_headline,
+                  ),
+                ],
+              ),
 
               const SizedBox(height: 24),
 
               // Time estimates
               const _SectionHeader(title: 'Time Estimates'),
               const SizedBox(height: 8),
-              _MetricGrid(children: [
-                _MetricCard(
-                  label: 'Reading Time',
-                  value: _formatTime(stats.readingTimeMinutes),
-                  icon: Icons.menu_book,
-                ),
-                _MetricCard(
-                  label: 'Speaking Time',
-                  value: _formatTime(stats.speakingTimeMinutes),
-                  icon: Icons.record_voice_over,
-                ),
-              ],),
+              _MetricGrid(
+                children: [
+                  _MetricCard(
+                    label: 'Reading Time',
+                    value: _formatTime(stats.readingTimeMinutes),
+                    icon: Icons.menu_book,
+                  ),
+                  _MetricCard(
+                    label: 'Speaking Time',
+                    value: _formatTime(stats.speakingTimeMinutes),
+                    icon: Icons.record_voice_over,
+                  ),
+                ],
+              ),
 
               const SizedBox(height: 24),
 
@@ -204,9 +210,7 @@ class _MetricGrid extends StatelessWidget {
     return Wrap(
       spacing: 12,
       runSpacing: 12,
-      children: children
-          .map((c) => SizedBox(width: 160, child: c))
-          .toList(),
+      children: children.map((c) => SizedBox(width: 160, child: c)).toList(),
     );
   }
 }
@@ -224,6 +228,8 @@ class _MetricCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+
     return Card(
       child: Padding(
         padding: const EdgeInsets.all(16),
@@ -237,7 +243,7 @@ class _MetricCard extends StatelessWidget {
             Text(
               label,
               style: AppTypography.labelSmall.copyWith(
-                color: AppColors.textSecondary,
+                color: colorScheme.onSurfaceVariant,
               ),
             ),
           ],
@@ -263,6 +269,7 @@ class _ReadabilityGauge extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final fraction = (value / maxValue).clamp(0.0, 1.0);
+    final colorScheme = Theme.of(context).colorScheme;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -274,7 +281,7 @@ class _ReadabilityGauge extends StatelessWidget {
           child: LinearProgressIndicator(
             value: fraction,
             minHeight: 8,
-            backgroundColor: AppColors.borderLight,
+            backgroundColor: colorScheme.surfaceContainerHighest,
             valueColor: AlwaysStoppedAnimation(_gaugeColor(fraction)),
           ),
         ),
@@ -282,7 +289,7 @@ class _ReadabilityGauge extends StatelessWidget {
         Text(
           description,
           style: AppTypography.bodySmall.copyWith(
-            color: AppColors.textSecondary,
+            color: colorScheme.onSurfaceVariant,
           ),
         ),
       ],
@@ -304,13 +311,15 @@ class _StatRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
         Text(
           label,
           style: AppTypography.bodySmall.copyWith(
-            color: AppColors.textSecondary,
+            color: colorScheme.onSurfaceVariant,
           ),
         ),
         Text(value, style: AppTypography.labelMedium),
@@ -346,7 +355,7 @@ class _CorrectionsSummary extends StatelessWidget {
               Text(
                 'No issues found',
                 style: AppTypography.bodyMedium.copyWith(
-                  color: AppColors.textSecondary,
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
                 ),
               ),
             ],

@@ -20,6 +20,8 @@ class SuggestionPanel extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+
     if (corrections.isEmpty) {
       return Center(
         child: Padding(
@@ -36,14 +38,14 @@ class SuggestionPanel extends StatelessWidget {
               Text(
                 'No issues found',
                 style: AppTypography.bodyLarge.copyWith(
-                  color: AppColors.textSecondary,
+                  color: colorScheme.onSurfaceVariant,
                 ),
               ),
               const SizedBox(height: 4),
               Text(
                 'Start typing to check your text',
                 style: AppTypography.bodySmall.copyWith(
-                  color: AppColors.textTertiary,
+                  color: colorScheme.onSurfaceVariant,
                 ),
               ),
             ],

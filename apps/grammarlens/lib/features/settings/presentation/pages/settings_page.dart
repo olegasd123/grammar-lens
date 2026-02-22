@@ -16,6 +16,8 @@ class SettingsPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('Settings'),
@@ -107,7 +109,7 @@ class SettingsPage extends StatelessWidget {
                       Text(
                         'Version 0.1.0',
                         style: AppTypography.bodySmall.copyWith(
-                          color: AppColors.textSecondary,
+                          color: colorScheme.onSurfaceVariant,
                         ),
                       ),
                       const SizedBox(height: 12),
@@ -116,7 +118,7 @@ class SettingsPage extends StatelessWidget {
                         'All processing happens locally — your text never '
                         'leaves your device.',
                         style: AppTypography.bodySmall.copyWith(
-                          color: AppColors.textSecondary,
+                          color: colorScheme.onSurfaceVariant,
                         ),
                       ),
                     ],

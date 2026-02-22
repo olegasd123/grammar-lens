@@ -84,7 +84,7 @@ class ExternalCheckPanel extends StatelessWidget {
                 Text(
                   'Source: ${state.sourceAppName}',
                   style: AppTypography.bodySmall.copyWith(
-                    color: AppColors.textSecondary,
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
                   ),
                 ),
             ],
@@ -123,7 +123,7 @@ class ExternalCheckPanel extends StatelessWidget {
         return _buildComplete(state);
 
       case ExternalCheckStatus.error:
-        return _buildError(state);
+        return _buildError(context, state);
     }
   }
 
@@ -152,7 +152,7 @@ class ExternalCheckPanel extends StatelessWidget {
               'Please grant permission in System Settings → '
               'Privacy & Security → Accessibility.',
               style: AppTypography.bodyMedium.copyWith(
-                color: AppColors.textSecondary,
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
               ),
               textAlign: TextAlign.center,
             ),
@@ -298,7 +298,7 @@ class ExternalCheckPanel extends StatelessWidget {
     );
   }
 
-  Widget _buildError(ExternalCheckState state) {
+  Widget _buildError(BuildContext context, ExternalCheckState state) {
     return Center(
       child: Padding(
         padding: const EdgeInsets.all(16),
@@ -314,7 +314,7 @@ class ExternalCheckPanel extends StatelessWidget {
             Text(
               state.errorMessage ?? 'An unexpected error occurred.',
               style: AppTypography.bodyMedium.copyWith(
-                color: AppColors.textSecondary,
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
               ),
               textAlign: TextAlign.center,
             ),
@@ -329,8 +329,8 @@ class ExternalCheckPanel extends StatelessWidget {
       return const SizedBox.shrink();
     }
 
-    final hasActive = state.corrections
-        .any((c) => !c.isAccepted && !c.isDismissed);
+    final hasActive =
+        state.corrections.any((c) => !c.isAccepted && !c.isDismissed);
 
     return Row(
       mainAxisAlignment: MainAxisAlignment.end,

@@ -3,11 +3,11 @@ import 'package:flutter/material.dart';
 /// GrammarLens color palette.
 abstract final class AppColors {
   // ── Brand ──────────────────────────────────────────────────────────────
-  static const primary = Color(0xFF2563EB);
-  static const primaryLight = Color(0xFF60A5FA);
-  static const primaryDark = Color(0xFF1D4ED8);
-  static const secondary = Color(0xFF7C3AED);
-  static const secondaryLight = Color(0xFFA78BFA);
+  static const primary = Color(0xFF3794FF);
+  static const primaryLight = Color(0xFF3794FF);
+  static const primaryDark = Color(0xFF005A9E);
+  static const secondary = Color(0xFF2F7D95);
+  static const secondaryLight = Color(0xFF5A9BB2);
 
   // ── Correction Types ───────────────────────────────────────────────────
   /// Grammar errors — red underline.
@@ -31,21 +31,21 @@ abstract final class AppColors {
   static const successGreenLight = Color(0xFFDCFCE7);
 
   // ── Neutrals (Light Mode) ─────────────────────────────────────────────
-  static const textPrimary = Color(0xFF111827);
-  static const textSecondary = Color(0xFF4B5563);
-  static const textTertiary = Color(0xFF9CA3AF);
-  static const background = Color(0xFFFAFAFA);
+  static const textPrimary = Color(0xFF1F1F1F);
+  static const textSecondary = Color(0xFF4F4F4F);
+  static const textTertiary = Color(0xFF767676);
+  static const background = Color(0xFFF3F3F3);
   static const surface = Color(0xFFFFFFFF);
-  static const surfaceVariant = Color(0xFFF3F4F6);
-  static const border = Color(0xFFE5E7EB);
-  static const borderLight = Color(0xFFF3F4F6);
+  static const surfaceVariant = Color(0xFFF7F7F7);
+  static const border = Color(0xFFE2E2E2);
+  static const borderLight = Color(0xFFEBEBEB);
 
   // ── Neutrals (Dark Mode) ──────────────────────────────────────────────
-  static const darkTextPrimary = Color(0xFFF9FAFB);
-  static const darkTextSecondary = Color(0xFFD1D5DB);
-  static const darkTextTertiary = Color(0xFF6B7280);
-  static const darkBackground = Color(0xFF111827);
-  static const darkSurface = Color(0xFF1F2937);
-  static const darkSurfaceVariant = Color(0xFF374151);
-  static const darkBorder = Color(0xFF374151);
+  static const darkTextPrimary = Color(0xFFE6E6E6);
+  static const darkTextSecondary = Color(0xFFB6B6B6);
+  static const darkTextTertiary = Color(0xFF8C8C8C);
+  static const darkBackground = Color(0xFF1E1E1E);
+  static const darkSurface = Color(0xFF252526);
+  static const darkSurfaceVariant = Color(0xFF2D2D30);
+  static const darkBorder = Color(0xFF3C3C3C);
 }

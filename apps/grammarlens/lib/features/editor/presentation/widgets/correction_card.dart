@@ -44,6 +44,8 @@ class CorrectionCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+
     return Card(
       child: Padding(
         padding: const EdgeInsets.all(12),
@@ -85,7 +87,7 @@ class CorrectionCard extends StatelessWidget {
                   TextSpan(
                     text: correction.originalText,
                     style: AppTypography.correctionText.copyWith(
-                      color: AppColors.textTertiary,
+                      color: colorScheme.onSurfaceVariant,
                       decoration: TextDecoration.lineThrough,
                     ),
                   ),
@@ -107,7 +109,7 @@ class CorrectionCard extends StatelessWidget {
               Text(
                 correction.explanation,
                 style: AppTypography.bodySmall.copyWith(
-                  color: AppColors.textSecondary,
+                  color: colorScheme.onSurfaceVariant,
                 ),
               ),
               const SizedBox(height: 8),

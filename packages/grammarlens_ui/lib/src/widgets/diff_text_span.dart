@@ -24,6 +24,9 @@ abstract final class DiffTextSpan {
     List<DiffSpanSegment> segments, {
     TextStyle? baseStyle,
   }) {
+    final deletedColor =
+        baseStyle?.color?.withValues(alpha: 0.7) ?? AppColors.textTertiary;
+
     return segments.map((segment) {
       switch (segment.operation) {
         case DiffOp.equal:
@@ -35,7 +38,7 @@ abstract final class DiffTextSpan {
           return TextSpan(
             text: segment.text,
             style: (baseStyle ?? const TextStyle()).copyWith(
-              color: AppColors.textTertiary,
+              color: deletedColor,
               decoration: TextDecoration.lineThrough,
               decorationColor: AppColors.errorRed,
               decorationThickness: 2,

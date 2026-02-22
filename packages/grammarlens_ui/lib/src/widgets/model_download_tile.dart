@@ -60,6 +60,8 @@ class ModelDownloadTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+
     return Card(
       child: Padding(
         padding: const EdgeInsets.all(16),
@@ -77,7 +79,7 @@ class ModelDownloadTile extends StatelessWidget {
                       Text(
                         '$language  •  $quantization  •  $size',
                         style: AppTypography.bodySmall.copyWith(
-                          color: AppColors.textSecondary,
+                          color: colorScheme.onSurfaceVariant,
                         ),
                       ),
                     ],
@@ -101,14 +103,14 @@ class ModelDownloadTile extends StatelessWidget {
                     ),
                   ),
                 const SizedBox(width: 8),
-                _buildActionButton(),
+                _buildActionButton(context),
               ],
             ),
             if (state == ModelTileState.downloading) ...[
               const SizedBox(height: 12),
               LinearProgressIndicator(
                 value: progress,
-                backgroundColor: AppColors.borderLight,
+                backgroundColor: colorScheme.surfaceContainerHighest,
                 valueColor: const AlwaysStoppedAnimation(AppColors.primary),
                 borderRadius: BorderRadius.circular(4),
               ),
@@ -116,7 +118,7 @@ class ModelDownloadTile extends StatelessWidget {
               Text(
                 '${(progress * 100).toStringAsFixed(0)}%',
                 style: AppTypography.labelSmall.copyWith(
-                  color: AppColors.textSecondary,
+                  color: colorScheme.onSurfaceVariant,
                 ),
               ),
             ],
@@ -126,7 +128,7 @@ class ModelDownloadTile extends StatelessWidget {
     );
   }
 
-  Widget _buildActionButton() {
+  Widget _buildActionButton(BuildContext context) {
     switch (state) {
       case ModelTileState.available:
         return IconButton(
@@ -157,7 +159,7 @@ class ModelDownloadTile extends StatelessWidget {
               onPressed: onDelete,
               icon: const Icon(Icons.delete_outline),
               tooltip: 'Delete',
-              color: AppColors.textTertiary,
+              color: Theme.of(context).colorScheme.onSurfaceVariant,
             ),
           ],
         );

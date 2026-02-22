@@ -278,80 +278,81 @@ class _EditorPageState extends State<EditorPage> {
           // Stats bar
           BlocBuilder<EditorBloc, EditorState>(
             buildWhen: (prev, curr) => prev.statistics != curr.statistics,
-          builder: (context, state) {
-            final stats = state.statistics;
-            if (stats == null) return const SizedBox(height: 40);
+            builder: (context, state) {
+              final stats = state.statistics;
+              if (stats == null) return const SizedBox(height: 40);
 
-            return Container(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-              color: Theme.of(context).colorScheme.surfaceContainerHighest,
-              child: Row(
-                children: [
-                  _StatChip(
-                    label: 'Words',
-                    value: '${stats.wordCount}',
-                  ),
-                  const SizedBox(width: 16),
-                  _StatChip(
-                    label: 'Sentences',
-                    value: '${stats.sentenceCount}',
-                  ),
-                  const SizedBox(width: 16),
-                  _StatChip(
-                    label: 'Reading',
-                    value: '${stats.readingTimeMinutes.toStringAsFixed(1)} min',
-                  ),
-                  const Spacer(),
-                  BlocBuilder<EditorBloc, EditorState>(
-                    buildWhen: (prev, curr) =>
-                        prev.activeCorrectionsCount !=
-                        curr.activeCorrectionsCount,
-                    builder: (context, state) {
-                      if (state.activeCorrectionsCount == 0) {
-                        return const SizedBox.shrink();
-                      }
-                      return TextButton.icon(
-                        onPressed: () {
-                          _editorBloc!.add(const AcceptAllCorrections());
-                        },
-                        icon: const Icon(Icons.done_all, size: 18),
-                        label: Text(
-                          'Fix all (${state.activeCorrectionsCount})',
-                        ),
-                      );
-                    },
-                  ),
-                ],
-              ),
-            );
-          },
-        ),
+              return Container(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                color: Theme.of(context).colorScheme.surfaceContainerHighest,
+                child: Row(
+                  children: [
+                    _StatChip(
+                      label: 'Words',
+                      value: '${stats.wordCount}',
+                    ),
+                    const SizedBox(width: 16),
+                    _StatChip(
+                      label: 'Sentences',
+                      value: '${stats.sentenceCount}',
+                    ),
+                    const SizedBox(width: 16),
+                    _StatChip(
+                      label: 'Reading',
+                      value:
+                          '${stats.readingTimeMinutes.toStringAsFixed(1)} min',
+                    ),
+                    const Spacer(),
+                    BlocBuilder<EditorBloc, EditorState>(
+                      buildWhen: (prev, curr) =>
+                          prev.activeCorrectionsCount !=
+                          curr.activeCorrectionsCount,
+                      builder: (context, state) {
+                        if (state.activeCorrectionsCount == 0) {
+                          return const SizedBox.shrink();
+                        }
+                        return TextButton.icon(
+                          onPressed: () {
+                            _editorBloc!.add(const AcceptAllCorrections());
+                          },
+                          icon: const Icon(Icons.done_all, size: 18),
+                          label: Text(
+                            'Fix all (${state.activeCorrectionsCount})',
+                          ),
+                        );
+                      },
+                    ),
+                  ],
+                ),
+              );
+            },
+          ),
 
-        // Text editor
-        Expanded(
-          child: Padding(
-            padding: const EdgeInsets.all(16),
-            child: TextField(
-              controller: _textController,
-              maxLines: null,
-              expands: true,
-              textAlignVertical: TextAlignVertical.top,
-              style: AppTypography.editorText,
-              decoration: const InputDecoration(
-                hintText:
-                    'Start typing or paste your text here...\n\n'
-                    'GrammarLens will check for grammar, spelling, '
-                    'punctuation, and style issues.',
-                border: InputBorder.none,
-                enabledBorder: InputBorder.none,
-                focusedBorder: InputBorder.none,
+          // Text editor
+          Expanded(
+            child: Padding(
+              padding: const EdgeInsets.all(16),
+              child: TextField(
+                controller: _textController,
+                maxLines: null,
+                expands: true,
+                textAlignVertical: TextAlignVertical.top,
+                style: AppTypography.editorText,
+                decoration: const InputDecoration(
+                  hintText: 'Start typing or paste your text here...\n\n'
+                      'GrammarLens will check for grammar, spelling, '
+                      'punctuation, and style issues.',
+                  border: InputBorder.none,
+                  enabledBorder: InputBorder.none,
+                  focusedBorder: InputBorder.none,
+                ),
+                onChanged: (text) {
+                  _editorBloc!.add(TextChanged(text: text));
+                },
               ),
-              onChanged: (text) {
-                _editorBloc!.add(TextChanged(text: text));
-              },
             ),
           ),
-        ),
         ],
       ),
     );
@@ -396,7 +397,8 @@ class _StatusIndicator extends StatelessWidget {
           child: CircularProgressIndicator(strokeWidth: 2),
         );
       case AnalysisStatus.complete:
-        return const Icon(Icons.check_circle, color: AppColors.successGreen, size: 20);
+        return const Icon(Icons.check_circle,
+            color: AppColors.successGreen, size: 20);
       case AnalysisStatus.error:
         return const Icon(Icons.error, color: AppColors.errorRed, size: 20);
     }
@@ -412,13 +414,15 @@ class _StatChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
         Text(
           '$label: ',
           style: AppTypography.labelSmall.copyWith(
-            color: AppColors.textTertiary,
+            color: colorScheme.onSurfaceVariant,
           ),
         ),
         Text(value, style: AppTypography.labelSmall),
