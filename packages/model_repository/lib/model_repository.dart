@@ -1,5 +1,5 @@
 /// Model download, storage, integrity verification, and registry.
-library model_repository;
+library;
 
 export 'src/model_downloader.dart';
 export 'src/model_info.dart';

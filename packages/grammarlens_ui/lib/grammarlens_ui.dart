@@ -1,7 +1,7 @@
 /// GrammarLens shared design system.
 ///
 /// Provides theme, colors, typography, and reusable widgets.
-library grammarlens_ui;
+library;
 
 // Theme
 export 'src/theme/app_colors.dart';

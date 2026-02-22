@@ -1,8 +1,11 @@
 import 'dart:async';
 
 import 'package:flutter/services.dart';
+import 'package:platform_integration/platform_integration.dart' show MacosAccessibilityService, MacosPlatformTextService;
 
 import 'package:platform_integration/src/accessibility_service.dart';
+import 'package:platform_integration/src/macos/macos_accessibility_service.dart' show MacosAccessibilityService;
+import 'package:platform_integration/src/macos/macos_platform_text_service.dart' show MacosPlatformTextService;
 
 /// Shared MethodChannel manager for macOS accessibility and text services.
 ///
@@ -45,7 +48,7 @@ class MacosAccessibilityChannel {
           appName: args['appName'] as String? ?? '',
           elementType: args['elementType'] as String? ?? '',
           text: args['text'] as String?,
-        ));
+        ),);
       case 'onFocusedTextChanged':
         final text = call.arguments as String?;
         if (text != null) {

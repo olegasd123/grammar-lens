@@ -3,7 +3,7 @@
 /// Provides high-level Dart API for loading GGUF models and running
 /// inference using llama.cpp, with isolate-based execution to keep
 /// the UI thread responsive.
-library llama_inference;
+library;
 
 export 'src/gpu_backend.dart';
 export 'src/inference_config.dart';

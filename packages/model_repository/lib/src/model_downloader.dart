@@ -68,7 +68,7 @@ class ModelDownloader {
         if (_isCancelled) {
           await sink.close();
           _log.info('Download cancelled');
-          throw ModelDownloadCancelledException();
+          throw const ModelDownloadCancelledException();
         }
 
         sink.add(chunk);

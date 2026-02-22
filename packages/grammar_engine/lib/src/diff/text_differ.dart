@@ -56,10 +56,12 @@ class TextDiffer {
 
     // Common prefix
     if (prefixLength > 0) {
-      segments.add(DiffSegment(
-        operation: DiffOperation.equal,
-        text: original.substring(0, prefixLength),
-      ));
+      segments.add(
+        DiffSegment(
+          operation: DiffOperation.equal,
+          text: original.substring(0, prefixLength),
+        ),
+      );
     }
 
     // Middle changes
@@ -67,10 +69,12 @@ class TextDiffer {
 
     // Common suffix
     if (suffixLength > 0) {
-      segments.add(DiffSegment(
-        operation: DiffOperation.equal,
-        text: original.substring(original.length - suffixLength),
-      ));
+      segments.add(
+        DiffSegment(
+          operation: DiffOperation.equal,
+          text: original.substring(original.length - suffixLength),
+        ),
+      );
     }
 
     return DiffResult(_mergeSegments(segments));
@@ -163,7 +167,8 @@ class TextDiffer {
 
       // Which diagonal did step d come from?
       int prevK;
-      if (k == -d || (k != d && vPrev[k - 1 + offset] < vPrev[k + 1 + offset])) {
+      if (k == -d ||
+          (k != d && vPrev[k - 1 + offset] < vPrev[k + 1 + offset])) {
         prevK = k + 1; // insert (moved down)
       } else {
         prevK = k - 1; // delete (moved right)
@@ -183,27 +188,33 @@ class TextDiffer {
       while (x > midX && y > midY) {
         x--;
         y--;
-        segments.add(DiffSegment(
-          operation: DiffOperation.equal,
-          text: a[x],
-        ));
+        segments.add(
+          DiffSegment(
+            operation: DiffOperation.equal,
+            text: a[x],
+          ),
+        );
       }
 
       // Emit the edit.
       if (prevK > k) {
         // Insert: y decreased by 1.
         y--;
-        segments.add(DiffSegment(
-          operation: DiffOperation.insert,
-          text: b[y],
-        ));
+        segments.add(
+          DiffSegment(
+            operation: DiffOperation.insert,
+            text: b[y],
+          ),
+        );
       } else {
         // Delete: x decreased by 1.
         x--;
-        segments.add(DiffSegment(
-          operation: DiffOperation.delete,
-          text: a[x],
-        ));
+        segments.add(
+          DiffSegment(
+            operation: DiffOperation.delete,
+            text: a[x],
+          ),
+        );
       }
     }
 
@@ -211,10 +222,12 @@ class TextDiffer {
     while (x > 0 && y > 0) {
       x--;
       y--;
-      segments.add(DiffSegment(
-        operation: DiffOperation.equal,
-        text: a[x],
-      ));
+      segments.add(
+        DiffSegment(
+          operation: DiffOperation.equal,
+          text: a[x],
+        ),
+      );
     }
 
     return _mergeSegments(segments.reversed.toList());

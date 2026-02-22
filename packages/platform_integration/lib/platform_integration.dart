@@ -1,5 +1,5 @@
 /// Platform-specific text access, accessibility, and hotkey integration.
-library platform_integration;
+library;
 
 export 'src/accessibility_service.dart';
 export 'src/clipboard_service.dart';

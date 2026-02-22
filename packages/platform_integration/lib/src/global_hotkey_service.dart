@@ -1,4 +1,3 @@
-import 'dart:ui';
 
 import 'package:flutter/services.dart';
 import 'package:logging/logging.dart';

@@ -115,11 +115,13 @@ class IsolateInference {
       }
     });
 
-    _commandPort!.send(_CompleteRequest(
-      requestId: requestId,
-      prompt: prompt,
-      config: config,
-    ));
+    _commandPort!.send(
+      _CompleteRequest(
+        requestId: requestId,
+        prompt: prompt,
+        config: config,
+      ),
+    );
 
     return completer.future;
   }
@@ -154,11 +156,13 @@ class IsolateInference {
       _commandPort!.send(_CancelRequest(requestId: requestId));
     };
 
-    _commandPort!.send(_StreamRequest(
-      requestId: requestId,
-      prompt: prompt,
-      config: config,
-    ));
+    _commandPort!.send(
+      _StreamRequest(
+        requestId: requestId,
+        prompt: prompt,
+        config: config,
+      ),
+    );
 
     return controller.stream;
   }
@@ -177,7 +181,8 @@ class IsolateInference {
 
   void _assertInitialized() {
     if (!_isInitialized) {
-      throw StateError('IsolateInference is not initialized. Call initialize() first.');
+      throw StateError(
+          'IsolateInference is not initialized. Call initialize() first.');
     }
   }
 }
@@ -230,15 +235,19 @@ Future<void> _isolateEntryPoint(_InitMessage init) async {
           message.prompt,
           config: message.config,
         );
-        init.sendPort.send(_CompletionResult(
-          requestId: message.requestId,
-          result: result,
-        ));
+        init.sendPort.send(
+          _CompletionResult(
+            requestId: message.requestId,
+            result: result,
+          ),
+        );
       } catch (e) {
-        init.sendPort.send(_ErrorResult(
-          requestId: message.requestId,
-          error: e.toString(),
-        ));
+        init.sendPort.send(
+          _ErrorResult(
+            requestId: message.requestId,
+            error: e.toString(),
+          ),
+        );
       }
     } else if (message is _StreamRequest) {
       try {
@@ -247,16 +256,20 @@ Future<void> _isolateEntryPoint(_InitMessage init) async {
           message.prompt,
           config: message.config,
         )) {
-          init.sendPort.send(_TokenResult(
-            requestId: message.requestId,
-            token: token,
-          ));
+          init.sendPort.send(
+            _TokenResult(
+              requestId: message.requestId,
+              token: token,
+            ),
+          );
         }
       } catch (e) {
-        init.sendPort.send(_ErrorResult(
-          requestId: message.requestId,
-          error: e.toString(),
-        ));
+        init.sendPort.send(
+          _ErrorResult(
+            requestId: message.requestId,
+            error: e.toString(),
+          ),
+        );
       }
     } else if (message is _CancelRequest) {
       _log.fine('Cancel request received for ${message.requestId}');

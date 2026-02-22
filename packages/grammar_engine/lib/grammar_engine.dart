@@ -3,7 +3,7 @@
 /// Provides sentence splitting, prompt building, correction parsing,
 /// language detection, text statistics, and diff computation.
 /// This package is pure Dart with no Flutter dependency.
-library grammar_engine;
+library;
 
 // Analyzer
 export 'src/analyzer/correction_parser.dart';

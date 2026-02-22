@@ -38,7 +38,7 @@ void main() {
     contextLength: 4096,
   );
 
-  final manifest = ModelManifest(
+  const manifest = ModelManifest(
     models: [enModel1, enModel2, esModel],
     version: 2,
   );
@@ -137,8 +137,10 @@ void main() {
             ModelManifest.fromJson(ModelManifest.bundledManifestJson);
         final enModels = bundled.getModelsForLanguage('en');
         expect(enModels, hasLength(2));
-        expect(enModels.map((m) => m.quantization).toSet(),
-            containsAll(['Q4_K_M', 'Q5_K_M']));
+        expect(
+          enModels.map((m) => m.quantization).toSet(),
+          containsAll(['Q4_K_M', 'Q5_K_M']),
+        );
       });
     });
   });

@@ -2,7 +2,7 @@ import 'dart:io' show Platform;
 
 import 'package:logging/logging.dart';
 
-import 'bindings/llama_bindings.dart';
+import 'package:llama_inference/src/bindings/llama_bindings.dart';
 
 final _log = Logger('GpuBackendDetector');
 
@@ -40,8 +40,7 @@ class GpuInfo {
   final int systemMemoryBytes;
 
   @override
-  String toString() =>
-      'GpuInfo(backend: $backend, isProbed: $isProbed, '
+  String toString() => 'GpuInfo(backend: $backend, isProbed: $isProbed, '
       'systemMemory: ${systemMemoryBytes ~/ (1024 * 1024)} MB)';
 }
 

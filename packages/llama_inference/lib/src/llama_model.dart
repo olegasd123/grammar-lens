@@ -2,6 +2,8 @@ import 'dart:ffi';
 import 'dart:io';
 
 import 'package:ffi/ffi.dart';
+import 'package:llama_inference/llama_inference.dart' show LlamaContext;
+import 'package:llama_inference/src/llama_context.dart' show LlamaContext;
 import 'package:logging/logging.dart';
 
 import 'package:llama_inference/src/bindings/llama_bindings.dart';
@@ -150,7 +152,7 @@ class LlamaModel {
   /// Throws if the model is not loaded.
   Pointer<Void> get nativePointer {
     if (!_isLoaded || _nativeModel == null) {
-      throw LlamaModelException('Model is not loaded');
+      throw const LlamaModelException('Model is not loaded');
     }
     return _nativeModel!;
   }

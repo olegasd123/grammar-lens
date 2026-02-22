@@ -47,11 +47,13 @@ class SentenceSplitter {
 
           final sentenceText = buffer.toString().trim();
           if (sentenceText.isNotEmpty) {
-            sentences.add(SentenceSpan(
-              text: sentenceText,
-              startOffset: sentenceStart,
-              endOffset: i + 1,
-            ));
+            sentences.add(
+              SentenceSpan(
+                text: sentenceText,
+                startOffset: sentenceStart,
+                endOffset: i + 1,
+              ),
+            );
           }
 
           buffer.clear();
@@ -64,11 +66,13 @@ class SentenceSplitter {
     // Add remaining text as final sentence
     final remaining = buffer.toString().trim();
     if (remaining.isNotEmpty) {
-      sentences.add(SentenceSpan(
-        text: remaining,
-        startOffset: sentenceStart,
-        endOffset: text.length,
-      ));
+      sentences.add(
+        SentenceSpan(
+          text: remaining,
+          startOffset: sentenceStart,
+          endOffset: text.length,
+        ),
+      );
     }
 
     return sentences;
@@ -76,7 +80,9 @@ class SentenceSplitter {
 
   /// Check if the character is a potential sentence terminator.
   static bool _isSentenceTerminator(String char) {
-    return char == '.' || char == '!' || char == '?' ||
+    return char == '.' ||
+        char == '!' ||
+        char == '?' ||
         char == '\n'; // Line breaks also split sentences
   }
 
@@ -118,7 +124,9 @@ class SentenceSplitter {
 
       // If next non-space char is lowercase, probably not sentence end
       final nextChar = _getNextNonSpaceChar(text, index + 1);
-      if (nextChar != null && nextChar == nextChar.toLowerCase() && nextChar != nextChar.toUpperCase()) {
+      if (nextChar != null &&
+          nextChar == nextChar.toLowerCase() &&
+          nextChar != nextChar.toUpperCase()) {
         // Next word starts with lowercase — likely abbreviation or decimal
         // But only if the word before is very short (abbreviation-like)
         if (wordBefore.length <= 3) return false;
@@ -131,7 +139,7 @@ class SentenceSplitter {
   }
 
   static String _getWordBefore(String text, int index) {
-    var end = index;
+    final end = index;
     var start = end - 1;
     while (start >= 0 && text[start] != ' ' && text[start] != '\n') {
       start--;

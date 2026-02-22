@@ -22,7 +22,7 @@ class CorrectionParser {
   }) {
     final corrections = <Correction>[];
     final itemPattern = RegExp(
-      r'<item>(.*?)</item>',
+      '<item>(.*?)</item>',
       dotAll: true,
     );
 

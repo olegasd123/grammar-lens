@@ -1,6 +1,8 @@
 import 'dart:async';
 
+import 'package:platform_integration/platform_integration.dart' show MacosAccessibilityService;
 import 'package:platform_integration/src/macos/macos_accessibility_channel.dart';
+import 'package:platform_integration/src/macos/macos_accessibility_service.dart' show MacosAccessibilityService;
 import 'package:platform_integration/src/platform_text_service.dart';
 
 /// macOS implementation of [PlatformTextService] using AXUIElement APIs.

@@ -5,10 +5,7 @@ import 'package:llama_inference/llama_inference.dart';
 
 void main() {
   group('GpuBackendDetector', () {
-    setUp(() {
-      // Reset cached detection before each test so fallback is exercised.
-      GpuBackendDetector.resetCache();
-    });
+    setUp(GpuBackendDetector.resetCache);
 
     // ── Fallback behavior (native library not available in tests) ──────
 
@@ -25,26 +22,38 @@ void main() {
       expect(info.systemMemoryBytes, 0);
     });
 
-    test('fallback returns Metal on macOS', () {
-      final info = GpuBackendDetector.probeGpuInfo();
-      if (Platform.isMacOS) {
-        expect(info.backend, GpuBackend.metal);
-      }
-    }, skip: !Platform.isMacOS ? 'Only runs on macOS' : null);
+    test(
+      'fallback returns Metal on macOS',
+      () {
+        final info = GpuBackendDetector.probeGpuInfo();
+        if (Platform.isMacOS) {
+          expect(info.backend, GpuBackend.metal);
+        }
+      },
+      skip: !Platform.isMacOS ? 'Only runs on macOS' : null,
+    );
 
-    test('fallback returns Vulkan on Linux', () {
-      final info = GpuBackendDetector.probeGpuInfo();
-      if (Platform.isLinux) {
-        expect(info.backend, GpuBackend.vulkan);
-      }
-    }, skip: !Platform.isLinux ? 'Only runs on Linux' : null);
+    test(
+      'fallback returns Vulkan on Linux',
+      () {
+        final info = GpuBackendDetector.probeGpuInfo();
+        if (Platform.isLinux) {
+          expect(info.backend, GpuBackend.vulkan);
+        }
+      },
+      skip: !Platform.isLinux ? 'Only runs on Linux' : null,
+    );
 
-    test('fallback returns Vulkan on Windows', () {
-      final info = GpuBackendDetector.probeGpuInfo();
-      if (Platform.isWindows) {
-        expect(info.backend, GpuBackend.vulkan);
-      }
-    }, skip: !Platform.isWindows ? 'Only runs on Windows' : null);
+    test(
+      'fallback returns Vulkan on Windows',
+      () {
+        final info = GpuBackendDetector.probeGpuInfo();
+        if (Platform.isWindows) {
+          expect(info.backend, GpuBackend.vulkan);
+        }
+      },
+      skip: !Platform.isWindows ? 'Only runs on Windows' : null,
+    );
 
     test('probeGpuInfo() caches result', () {
       final first = GpuBackendDetector.probeGpuInfo();
@@ -111,9 +120,7 @@ void main() {
   });
 
   group('MemoryManager', () {
-    setUp(() {
-      GpuBackendDetector.resetCache();
-    });
+    setUp(GpuBackendDetector.resetCache);
 
     test('estimateAvailableMemory returns a positive value', () async {
       final memory = await MemoryManager.estimateAvailableMemory();
@@ -129,7 +136,8 @@ void main() {
     });
 
     test('canFitModel returns true for small models', () async {
-      final canFit = await MemoryManager.canFitModel(100 * 1024 * 1024); // 100 MB
+      final canFit =
+          await MemoryManager.canFitModel(100 * 1024 * 1024); // 100 MB
       expect(canFit, isTrue);
     });
 
@@ -143,12 +151,15 @@ void main() {
 
   group('GpuBackend enum', () {
     test('has all expected values', () {
-      expect(GpuBackend.values, containsAll([
-        GpuBackend.metal,
-        GpuBackend.vulkan,
-        GpuBackend.cuda,
-        GpuBackend.cpu,
-      ]));
+      expect(
+        GpuBackend.values,
+        containsAll([
+          GpuBackend.metal,
+          GpuBackend.vulkan,
+          GpuBackend.cuda,
+          GpuBackend.cpu,
+        ]),
+      );
     });
   });
 }

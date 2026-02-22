@@ -84,8 +84,7 @@ class TextStatisticsCalculator {
         sentenceCount > 0 ? wordCount / sentenceCount : wordCount.toDouble();
 
     final totalWordChars = words.fold(0, (sum, w) => sum + w.length);
-    final avgWordLength =
-        wordCount > 0 ? totalWordChars / wordCount : 0.0;
+    final avgWordLength = wordCount > 0 ? totalWordChars / wordCount : 0.0;
 
     final readingTimeMinutes = wordCount / _readingWpm;
     final speakingTimeMinutes = wordCount / _speakingWpm;
@@ -109,14 +108,11 @@ class TextStatisticsCalculator {
   }
 
   List<String> _splitWords(String text) {
-    return text
-        .split(RegExp(r'\s+'))
-        .where((w) => w.isNotEmpty)
-        .toList();
+    return text.split(RegExp(r'\s+')).where((w) => w.isNotEmpty).toList();
   }
 
   int _countSentences(String text) {
-    final sentenceEnders = RegExp(r'[.!?]+');
+    final sentenceEnders = RegExp('[.!?]+');
     return sentenceEnders.allMatches(text).length.clamp(1, text.length);
   }
 

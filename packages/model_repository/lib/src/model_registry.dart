@@ -2,10 +2,9 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:logging/logging.dart';
-import 'package:path/path.dart' as p;
-
 import 'package:model_repository/src/model_info.dart';
 import 'package:model_repository/src/model_storage.dart';
+import 'package:path/path.dart' as p;
 
 final _log = Logger('ModelRegistry');
 
@@ -56,7 +55,8 @@ class ModelRegistry {
     data['installed'] = models;
 
     // Also remove from active models if it was active
-    final active = (data['active'] as Map<String, dynamic>? ?? {}).cast<String, String>();
+    final active =
+        (data['active'] as Map<String, dynamic>? ?? {}).cast<String, String>();
     active.removeWhere((_, value) => value == modelId);
     data['active'] = active;
 

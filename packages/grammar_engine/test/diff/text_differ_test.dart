@@ -135,10 +135,10 @@ void main() {
     });
 
     test('handles longer paragraph-level diff', () {
-      final original = 'The weather is nice today. '
+      const original = 'The weather is nice today. '
           'I will go to the park. '
           'The birds are singing.';
-      final modified = 'The weather is wonderful today. '
+      const modified = 'The weather is wonderful today. '
           'I will go to the park. '
           'The birds are singing loudly.';
 

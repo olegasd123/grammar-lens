@@ -57,12 +57,10 @@ class ReadabilityScorer {
     double syllablesPerWord,
   ) {
     // Flesch Reading Ease
-    final ease =
-        206.835 - 1.015 * wordsPerSentence - 84.6 * syllablesPerWord;
+    final ease = 206.835 - 1.015 * wordsPerSentence - 84.6 * syllablesPerWord;
 
     // Flesch-Kincaid Grade Level
-    final grade =
-        0.39 * wordsPerSentence + 11.8 * syllablesPerWord - 15.59;
+    final grade = 0.39 * wordsPerSentence + 11.8 * syllablesPerWord - 15.59;
 
     return ReadabilityScores(
       fleschReadingEase: ease.clamp(0, 100),
@@ -76,8 +74,7 @@ class ReadabilityScorer {
     double syllablesPerWord,
   ) {
     // Simplified Flesch adaptation for non-English languages
-    final ease =
-        206.835 - 1.015 * wordsPerSentence - 84.6 * syllablesPerWord;
+    final ease = 206.835 - 1.015 * wordsPerSentence - 84.6 * syllablesPerWord;
 
     return ReadabilityScores(
       fleschReadingEase: ease.clamp(0, 100),
@@ -93,14 +90,11 @@ class ReadabilityScorer {
   }
 
   static List<String> _splitWords(String text) {
-    return text
-        .split(RegExp(r'\s+'))
-        .where((w) => w.isNotEmpty)
-        .toList();
+    return text.split(RegExp(r'\s+')).where((w) => w.isNotEmpty).toList();
   }
 
   static int _countSentences(String text) {
-    return RegExp(r'[.!?]+').allMatches(text).length.clamp(1, text.length);
+    return RegExp('[.!?]+').allMatches(text).length.clamp(1, text.length);
   }
 
   static int _countTotalSyllables(
@@ -115,12 +109,14 @@ class ReadabilityScorer {
   /// Uses a simple vowel-group heuristic. Not perfectly accurate
   /// but sufficient for readability scoring.
   static int _countSyllables(String word) {
-    word = word.toLowerCase().replaceAll(RegExp(r'[^a-záéíóúàèìòùâêîôûäëïöüñç]'), '');
+    word = word
+        .toLowerCase()
+        .replaceAll(RegExp('[^a-záéíóúàèìòùâêîôûäëïöüñç]'), '');
     if (word.isEmpty) return 0;
     if (word.length <= 3) return 1;
 
     // Count vowel groups
-    final vowelGroups = RegExp(r'[aeiouyáéíóúàèìòùâêîôûäëïöü]+');
+    final vowelGroups = RegExp('[aeiouyáéíóúàèìòùâêîôûäëïöü]+');
     var count = vowelGroups.allMatches(word).length;
 
     // Adjust for common patterns

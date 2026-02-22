@@ -54,7 +54,8 @@ class LlamaContext {
     int batchSize = 512,
   }) {
     if (!model.isLoaded) {
-      throw LlamaContextException('Cannot create context: model not loaded');
+      throw const LlamaContextException(
+          'Cannot create context: model not loaded');
     }
 
     _log.info('Creating context (size: $contextSize)');
@@ -72,7 +73,7 @@ class LlamaContext {
       batchSize,
     );
     if (ptr == nullptr) {
-      throw LlamaContextException('Failed to create native context');
+      throw const LlamaContextException('Failed to create native context');
     }
     context._nativeContext = ptr;
     context._isActive = true;
@@ -102,7 +103,7 @@ class LlamaContext {
     // 1. Tokenize prompt
     final tokens = _tokenize(prompt, addSpecial: true);
     if (tokens.isEmpty) {
-      throw LlamaContextException('Tokenization produced no tokens');
+      throw const LlamaContextException('Tokenization produced no tokens');
     }
     _log.fine('Prompt tokenized: ${tokens.length} tokens');
 
@@ -138,7 +139,7 @@ class LlamaContext {
     if (grammarNative != nullptr) calloc.free(grammarNative);
 
     if (sampler == nullptr) {
-      throw LlamaContextException('Failed to create sampler');
+      throw const LlamaContextException('Failed to create sampler');
     }
 
     // 4. Generate tokens
@@ -200,7 +201,7 @@ class LlamaContext {
     // 1. Tokenize prompt
     final tokens = _tokenize(prompt, addSpecial: true);
     if (tokens.isEmpty) {
-      throw LlamaContextException('Tokenization produced no tokens');
+      throw const LlamaContextException('Tokenization produced no tokens');
     }
 
     // 2. Decode prompt batch
@@ -235,7 +236,7 @@ class LlamaContext {
     if (grammarNative != nullptr) calloc.free(grammarNative);
 
     if (sampler == nullptr) {
-      throw LlamaContextException('Failed to create sampler');
+      throw const LlamaContextException('Failed to create sampler');
     }
 
     // 4. Generate and yield tokens
@@ -301,7 +302,7 @@ class LlamaContext {
 
   void _assertActive() {
     if (!_isActive || _nativeContext == null) {
-      throw LlamaContextException('Context is not active');
+      throw const LlamaContextException('Context is not active');
     }
   }
 
@@ -347,7 +348,8 @@ class LlamaContext {
   /// Detokenize a single token ID to a string.
   String _detokenize(int token) {
     final buf = calloc<Uint8>(128);
-    final len = _b.tokenToPiece(model.nativePointer, token, buf.cast<Utf8>(), 128);
+    final len =
+        _b.tokenToPiece(model.nativePointer, token, buf.cast<Utf8>(), 128);
     if (len <= 0) {
       calloc.free(buf);
       return '';

@@ -1,4 +1,8 @@
 import 'package:flutter/services.dart';
+import 'package:platform_integration/platform_integration.dart'
+    show MacosClipboardService;
+import 'package:platform_integration/src/macos/macos_clipboard_service.dart'
+    show MacosClipboardService;
 
 /// Cross-platform clipboard access.
 ///

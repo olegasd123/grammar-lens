@@ -21,7 +21,7 @@ void main() {
     group('computeChecksum', () {
       test('computes correct SHA-256 for known content', () async {
         final file = File('${tempDir.path}/test.bin');
-        final content = 'Hello, GrammarLens!';
+        const content = 'Hello, GrammarLens!';
         file.writeAsStringSync(content);
 
         // Compute expected hash independently.
@@ -69,7 +69,7 @@ void main() {
     group('verifyChecksum', () {
       test('returns true for matching checksum', () async {
         final file = File('${tempDir.path}/verify.bin');
-        final content = 'GrammarLens test data';
+        const content = 'GrammarLens test data';
         file.writeAsStringSync(content);
 
         final correctHash = sha256.convert(content.codeUnits).toString();

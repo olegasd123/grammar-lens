@@ -2,7 +2,7 @@ import 'dart:io';
 
 import 'package:logging/logging.dart';
 
-import 'gpu_backend.dart';
+import 'package:llama_inference/src/gpu_backend.dart';
 
 final _log = Logger('MemoryManager');
 
