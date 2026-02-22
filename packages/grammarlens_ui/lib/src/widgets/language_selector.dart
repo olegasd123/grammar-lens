@@ -83,6 +83,7 @@ class LanguageSelector extends StatelessWidget {
       },
       underline: const SizedBox.shrink(),
       borderRadius: BorderRadius.circular(8),
+      padding: const EdgeInsets.symmetric(horizontal: 12),
     );
   }
 }
