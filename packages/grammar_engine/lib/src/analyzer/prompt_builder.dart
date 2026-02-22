@@ -18,13 +18,13 @@ class PromptBuilder {
   ) {
     final sentenceText = sentences.map((s) => s.text).join('\n');
     final systemPrompt = _systemPrompts[language]!;
+    final userInstruction = _userInstructions[language]!;
 
     return '<|system|>\n'
         '$systemPrompt\n'
         '<|end|>\n'
         '<|user|>\n'
-        'Analyze the following text for grammar, spelling, punctuation, '
-        'and style errors:\n\n'
+        '$userInstruction\n\n'
         '"""\n'
         '$sentenceText\n'
         '"""\n'
@@ -39,6 +39,25 @@ class PromptBuilder {
     SupportedLanguage.french: _frenchSystemPrompt,
     SupportedLanguage.german: _germanSystemPrompt,
     SupportedLanguage.portuguese: _portugueseSystemPrompt,
+  };
+
+  /// Language-specific user instructions.
+  static const _userInstructions = {
+    SupportedLanguage.english:
+        'Analyze the following text for grammar, spelling, punctuation, '
+            'and style errors:',
+    SupportedLanguage.spanish:
+        'Analiza el siguiente texto en busca de errores gramaticales, '
+            'ortográficos, de puntuación y de estilo:',
+    SupportedLanguage.french:
+        'Analysez le texte suivant pour détecter les erreurs de grammaire, '
+            "d'orthographe, de ponctuation et de style:",
+    SupportedLanguage.german:
+        'Analysieren Sie den folgenden Text auf Grammatik-, Rechtschreib-, '
+            'Zeichensetzungs- und Stilfehler:',
+    SupportedLanguage.portuguese:
+        'Analise o seguinte texto em busca de erros gramaticais, '
+            'ortográficos, de pontuação e de estilo:',
   };
 
   static const _englishSystemPrompt = '''
@@ -72,9 +91,9 @@ Reglas:
 - Tipos de error: grammar, spelling, punctuation, style.
 - Si no hay errores, devuelve un bloque vacío <corrections></corrections>.
 - Sé conservador: en caso de duda, no marques.
-- Revisa: concordancia de género y número, uso de ser/estar, acentuación, uso de subjuntivo, preposiciones, ortografía y puntuación.
+- Revisa: concordancia de género y número, uso de ser/estar, acentuación y reglas de tilde, uso del subjuntivo vs. indicativo, pretérito vs. imperfecto, pronombres de complemento directo e indirecto (leísmo, laísmo, loísmo), preposiciones (por/para, a/en), dequeísmo y queísmo, signos de apertura (¿ ¡), palabras comúnmente confundidas (haber/a ver, hay/ahí/ay, hecho/echo, vaya/valla, sino/si no), ortografía y puntuación.
 
-Output format:
+Formato de salida:
 <corrections>
 <item>
   <original>texto erróneo</original>
@@ -94,9 +113,9 @@ Règles:
 - Types d'erreur: grammar, spelling, punctuation, style.
 - S'il n'y a pas d'erreurs, produisez un bloc vide <corrections></corrections>.
 - Soyez conservateur: en cas de doute, ne signalez pas.
-- Vérifiez: accord sujet-verbe, accord adjectif-nom, usage des articles, conjugaison, accents, orthographe et ponctuation.
+- Vérifiez: accord sujet-verbe, accord adjectif-nom (genre et nombre), usage des articles (définis, indéfinis, partitifs — du/de la/des), conjugaison verbale (verbes irréguliers inclus), passé composé vs. imparfait, accord du participe passé (avec être et avoir), accents (aigu, grave, circonflexe, tréma, cédille), négation (ne...pas, ne...jamais, ne...rien), mots couramment confondus (ces/ses/c'est/s'est, ou/où, a/à, et/est, ce/se, leur/leurs), orthographe et ponctuation.
 
-Output format:
+Format de sortie:
 <corrections>
 <item>
   <original>texte erroné</original>
@@ -116,9 +135,9 @@ Regeln:
 - Fehlertypen: grammar, spelling, punctuation, style.
 - Wenn keine Fehler vorhanden sind, geben Sie einen leeren Block <corrections></corrections> aus.
 - Seien Sie konservativ: im Zweifelsfall nicht markieren.
-- Prüfen Sie: Kasus (Nominativ, Akkusativ, Dativ, Genitiv), Genus-Kongruenz, Verbkonjugation, Wortstellung, Kommasetzung, Rechtschreibung und Zeichensetzung.
+- Prüfen Sie: Kasus (Nominativ, Akkusativ, Dativ, Genitiv), Genus-Kongruenz (der/die/das), Verbkonjugation (trennbare und untrennbare Verben), Wortstellung (Verb-Zweit-Stellung im Hauptsatz, Verb-End-Stellung im Nebensatz), Kommasetzung (insbesondere vor Nebensätzen), Groß- und Kleinschreibung (Substantivierung), zusammengesetzte Wörter, häufig verwechselte Wörter (das/dass, seit/seid, wider/wieder, weise/Weise), Rechtschreibung und Zeichensetzung.
 
-Output format:
+Ausgabeformat:
 <corrections>
 <item>
   <original>fehlerhafter Text</original>
@@ -138,9 +157,9 @@ Regras:
 - Tipos de erro: grammar, spelling, punctuation, style.
 - Se não houver erros, produza um bloco vazio <corrections></corrections>.
 - Seja conservador: em caso de dúvida, não sinalize.
-- Verifique: concordância verbal e nominal, uso de crase, regência verbal, acentuação, ortografia e pontuação.
+- Verifique: concordância verbal e nominal, uso de crase (à), regência verbal e nominal, colocação pronominal (próclise, mesóclise, ênclise), infinitivo pessoal, uso do subjuntivo, acentuação gráfica, palavras comumente confundidas (mal/mau, mais/mas, por que/porque/porquê/por quê, a/há, afim/a fim), ortografia e pontuação.
 
-Output format:
+Formato de saída:
 <corrections>
 <item>
   <original>texto com erro</original>
