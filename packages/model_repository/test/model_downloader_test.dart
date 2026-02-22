@@ -166,8 +166,7 @@ void main() {
 
     test('cleanupPartial removes .part files', () async {
       final destPath = '${tempDir.path}/cleanup.gguf';
-      final partFile = File('$destPath.part');
-      partFile.writeAsBytesSync([1, 2, 3]);
+      final partFile = File('$destPath.part')..writeAsBytesSync([1, 2, 3]);
 
       expect(partFile.existsSync(), isTrue);
 

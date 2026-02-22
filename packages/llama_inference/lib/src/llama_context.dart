@@ -2,12 +2,11 @@ import 'dart:ffi';
 import 'dart:io' show Platform;
 
 import 'package:ffi/ffi.dart';
-import 'package:logging/logging.dart';
-
 import 'package:llama_inference/src/bindings/llama_bindings.dart';
 import 'package:llama_inference/src/inference_config.dart';
 import 'package:llama_inference/src/inference_result.dart';
 import 'package:llama_inference/src/llama_model.dart';
+import 'package:logging/logging.dart';
 
 final _log = Logger('LlamaContext');
 final _b = LlamaBindings.instance;
@@ -55,7 +54,8 @@ class LlamaContext {
   }) {
     if (!model.isLoaded) {
       throw const LlamaContextException(
-          'Cannot create context: model not loaded');
+        'Cannot create context: model not loaded',
+      );
     }
 
     _log.info('Creating context (size: $contextSize)');
@@ -75,8 +75,9 @@ class LlamaContext {
     if (ptr == nullptr) {
       throw const LlamaContextException('Failed to create native context');
     }
-    context._nativeContext = ptr;
-    context._isActive = true;
+    context
+      .._nativeContext = ptr
+      .._isActive = true;
     return context;
   }
 

@@ -3,11 +3,10 @@ import 'dart:io';
 
 import 'package:ffi/ffi.dart';
 import 'package:llama_inference/llama_inference.dart' show LlamaContext;
-import 'package:llama_inference/src/llama_context.dart' show LlamaContext;
-import 'package:logging/logging.dart';
-
 import 'package:llama_inference/src/bindings/llama_bindings.dart';
 import 'package:llama_inference/src/gpu_backend.dart';
+import 'package:llama_inference/src/llama_context.dart' show LlamaContext;
+import 'package:logging/logging.dart';
 
 final _log = Logger('LlamaModel');
 final _b = LlamaBindings.instance;
@@ -50,7 +49,7 @@ class LlamaModel {
   int _contextLength = 0;
 
   /// Native model pointer (opaque, platform-specific).
-  /// In the real implementation, this would be Pointer<llama_model>.
+  /// In the real implementation, this would be `Pointer<llama_model>`.
   Pointer<Void>? _nativeModel;
 
   LlamaModel._({
@@ -104,9 +103,10 @@ class LlamaModel {
       calloc.free(pathNative);
     }
 
-    model._isLoaded = true;
-    model._memoryUsageBytes = _b.modelSize(model._nativeModel!);
-    model._contextLength = _b.modelNCtxTrain(model._nativeModel!);
+    model
+      .._isLoaded = true
+      .._memoryUsageBytes = _b.modelSize(model._nativeModel!)
+      .._contextLength = _b.modelNCtxTrain(model._nativeModel!);
 
     _log.info(
       'Model loaded successfully. '

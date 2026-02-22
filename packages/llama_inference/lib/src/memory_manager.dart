@@ -1,9 +1,8 @@
 import 'dart:io';
 
-import 'package:logging/logging.dart';
-
 import 'package:llama_inference/src/android_memory_info.dart';
 import 'package:llama_inference/src/gpu_backend.dart';
+import 'package:logging/logging.dart';
 
 final _log = Logger('MemoryManager');
 
@@ -13,7 +12,7 @@ final _log = Logger('MemoryManager');
 /// current device and whether models need to be unloaded.
 ///
 /// Memory estimation priority chain:
-/// 1. Android: [ActivityManager] via platform channel (available + low-RAM check)
+/// 1. Android: `ActivityManager` via platform channel (available + low-RAM check)
 /// 2. All platforms: native FFI probe for total system RAM (via `gl_detect_gpu`)
 /// 3. Hardcoded per-platform estimates as final fallback
 class MemoryManager {
@@ -22,7 +21,7 @@ class MemoryManager {
   /// Estimate available memory for model loading (in bytes).
   ///
   /// Uses the best available source of memory information:
-  /// - On Android, queries [ActivityManager] for real-time available memory
+  /// - On Android, queries `ActivityManager` for real-time available memory
   ///   and device characteristics (low-RAM flag, large-heap class).
   /// - On other platforms, uses total system RAM from the native FFI probe.
   /// - Falls back to hardcoded estimates if neither source is available.

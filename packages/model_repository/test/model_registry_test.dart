@@ -52,7 +52,8 @@ void main() {
   });
 
   group('ModelRegistry', () {
-    test('getInstalledModels returns empty list when no registry file', () async {
+    test('getInstalledModels returns empty list when no registry file',
+        () async {
       final models = await registry.getInstalledModels();
       expect(models, isEmpty);
     });
@@ -165,8 +166,9 @@ void main() {
 
     test('handles corrupted registry file gracefully', () async {
       // Write invalid JSON to registry.
-      final registryFile = File('${tempDir.path}/registry.json');
-      registryFile.writeAsStringSync('not valid json {{{{');
+      File(
+        '${tempDir.path}/registry.json',
+      ).writeAsStringSync('not valid json {{{{');
 
       final models = await registry.getInstalledModels();
       expect(models, isEmpty);

@@ -30,13 +30,12 @@ class ModelRegistry {
   /// Register a newly downloaded model.
   Future<void> registerModel(ModelInfo info) async {
     final data = await _readRegistry();
-    final models = (data['installed'] as List<dynamic>? ?? []).toList();
-
-    // Remove existing entry with same ID (update)
-    models.removeWhere(
-      (m) => (m as Map<String, dynamic>)['id'] == info.id,
-    );
-    models.add(info.toJson());
+    final models = (data['installed'] as List<dynamic>? ?? []).toList()
+      ..removeWhere(
+        // Remove existing entry with same ID (update).
+        (m) => (m as Map<String, dynamic>)['id'] == info.id,
+      )
+      ..add(info.toJson());
 
     data['installed'] = models;
     await _writeRegistry(data);
@@ -47,17 +46,17 @@ class ModelRegistry {
   /// Remove a model from the registry.
   Future<void> unregisterModel(String modelId) async {
     final data = await _readRegistry();
-    final models = (data['installed'] as List<dynamic>? ?? []).toList();
-    models.removeWhere(
-      (m) => (m as Map<String, dynamic>)['id'] == modelId,
-    );
+    final models = (data['installed'] as List<dynamic>? ?? []).toList()
+      ..removeWhere(
+        (m) => (m as Map<String, dynamic>)['id'] == modelId,
+      );
 
     data['installed'] = models;
 
     // Also remove from active models if it was active
-    final active =
-        (data['active'] as Map<String, dynamic>? ?? {}).cast<String, String>();
-    active.removeWhere((_, value) => value == modelId);
+    final active = (data['active'] as Map<String, dynamic>? ?? {})
+        .cast<String, String>()
+      ..removeWhere((_, value) => value == modelId);
     data['active'] = active;
 
     await _writeRegistry(data);

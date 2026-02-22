@@ -66,9 +66,7 @@ void main() {
   group('AndroidMemoryChannel', () {
     const channel = MethodChannel('com.grammarlens/memory');
 
-    setUp(() {
-      AndroidMemoryChannel.resetCache();
-    });
+    setUp(AndroidMemoryChannel.resetCache);
 
     tearDown(() {
       TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger

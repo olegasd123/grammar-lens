@@ -27,8 +27,8 @@ class FocusEvent {
 /// platform's accessibility framework.
 ///
 /// Implementations:
-/// - macOS: [AccessibilityBridge] using AXUIElement
-/// - Windows: [UIAutomationBridge] using IUIAutomation
+/// - macOS: `AccessibilityBridge` using AXUIElement
+/// - Windows: `UIAutomationBridge` using IUIAutomation
 /// - Linux: AT-SPI bridge
 abstract class AccessibilityService {
   /// Request accessibility permission from the user.

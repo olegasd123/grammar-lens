@@ -3,7 +3,7 @@ import 'package:logging/logging.dart';
 
 final _log = Logger('AndroidMemoryInfo');
 
-/// Memory information retrieved from Android's [ActivityManager].
+/// Memory information retrieved from Android's `ActivityManager`.
 ///
 /// Provides runtime memory data that is more accurate than static estimates
 /// for deciding model quantization and GPU layer offloading on Android.
@@ -53,8 +53,7 @@ class AndroidMemoryInfo {
   }
 
   @override
-  String toString() =>
-      'AndroidMemoryInfo('
+  String toString() => 'AndroidMemoryInfo('
       'total: ${totalMemBytes ~/ (1024 * 1024)} MB, '
       'avail: ${availMemBytes ~/ (1024 * 1024)} MB, '
       'lowMemory: $lowMemory, '

@@ -1,8 +1,7 @@
 import 'dart:io' show Platform;
 
-import 'package:logging/logging.dart';
-
 import 'package:llama_inference/src/bindings/llama_bindings.dart';
+import 'package:logging/logging.dart';
 
 final _log = Logger('GpuBackendDetector');
 

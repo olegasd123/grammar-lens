@@ -32,8 +32,7 @@ void main() {
       });
 
       test('computes checksum for empty file', () async {
-        final file = File('${tempDir.path}/empty.bin');
-        file.writeAsBytesSync([]);
+        final file = File('${tempDir.path}/empty.bin')..writeAsBytesSync([]);
 
         // SHA-256 of empty input.
         final expectedHash = sha256.convert([]).toString();
@@ -43,9 +42,9 @@ void main() {
       });
 
       test('reports progress during computation', () async {
-        final file = File('${tempDir.path}/progress.bin');
-        // Write a non-trivial amount of data.
-        file.writeAsBytesSync(List.filled(1024 * 64, 42));
+        final file = File('${tempDir.path}/progress.bin')
+          // Write a non-trivial amount of data.
+          ..writeAsBytesSync(List.filled(1024 * 64, 42));
 
         final progressValues = <double>[];
         await ModelIntegrity.computeChecksum(
@@ -79,8 +78,8 @@ void main() {
       });
 
       test('returns true regardless of case in expected hash', () async {
-        final file = File('${tempDir.path}/case.bin');
-        file.writeAsStringSync('data');
+        final file = File('${tempDir.path}/case.bin')
+          ..writeAsStringSync('data');
 
         final hash = sha256.convert('data'.codeUnits).toString();
         final upperHash = hash.toUpperCase();
@@ -91,8 +90,8 @@ void main() {
       });
 
       test('returns false for mismatched checksum', () async {
-        final file = File('${tempDir.path}/mismatch.bin');
-        file.writeAsStringSync('actual content');
+        final file = File('${tempDir.path}/mismatch.bin')
+          ..writeAsStringSync('actual content');
 
         final result = await ModelIntegrity.verifyChecksum(
           file.path,

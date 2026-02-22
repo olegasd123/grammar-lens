@@ -1,14 +1,13 @@
 import 'dart:async';
 import 'dart:isolate';
 
-import 'package:logging/logging.dart';
-
 import 'package:llama_inference/src/bindings/llama_bindings.dart';
 import 'package:llama_inference/src/gpu_backend.dart';
 import 'package:llama_inference/src/inference_config.dart';
 import 'package:llama_inference/src/inference_result.dart';
 import 'package:llama_inference/src/llama_context.dart';
 import 'package:llama_inference/src/llama_model.dart';
+import 'package:logging/logging.dart';
 
 final _log = Logger('IsolateInference');
 
@@ -145,8 +144,9 @@ class IsolateInference {
           controller.close();
         }
       } else if (msg is _ErrorResult) {
-        controller.addError(InferenceException(msg.error));
-        controller.close();
+        controller
+          ..addError(InferenceException(msg.error))
+          ..close();
       }
     });
 
@@ -182,7 +182,8 @@ class IsolateInference {
   void _assertInitialized() {
     if (!_isInitialized) {
       throw StateError(
-          'IsolateInference is not initialized. Call initialize() first.');
+        'IsolateInference is not initialized. Call initialize() first.',
+      );
     }
   }
 }
