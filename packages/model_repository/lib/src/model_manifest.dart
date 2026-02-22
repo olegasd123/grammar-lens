@@ -49,6 +49,19 @@ class ModelManifest {
     'version': 1,
     'models': [
       {
+        'id': 'phi-3-mini-4k-instruct-q5_k_m',
+        'displayName': 'Grammar phi-3-mini',
+        'language': 'en',
+        'quantization': 'Q5_K_M',
+        'fileSizeBytes': 2815274944,
+        'sha256':
+            '589fe69682475914b9d61beaa37876a49ac9f28f552363d28ab44dab67f7315b',
+        'downloadUrl':
+            'https://huggingface.co/Marlon81/Phi-3-mini-4k-instruct-Q5_K_M-GGUF/resolve/main/phi-3-mini-4k-instruct-q5_k_m.gguf',
+        'minAppVersion': '0.1.0',
+        'contextLength': 4096,
+      },
+      {
         'id': 'phi3-mini-grammar-en-q4km',
         'displayName': 'English Grammar (Standard)',
         'language': 'en',
