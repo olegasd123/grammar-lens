@@ -99,6 +99,24 @@ class _EditorPageState extends State<EditorPage> {
     setState(() {});
   }
 
+  void _syncControllerText(String newText) {
+    if (_textController.text == newText) return;
+
+    final selection = _textController.selection;
+    final max = newText.length;
+    final baseOffset = selection.baseOffset.clamp(0, max);
+    final extentOffset = selection.extentOffset.clamp(0, max);
+
+    _textController.value = _textController.value.copyWith(
+      text: newText,
+      selection: TextSelection(
+        baseOffset: baseOffset,
+        extentOffset: extentOffset,
+      ),
+      composing: TextRange.empty,
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return MultiBlocListener(
@@ -265,14 +283,22 @@ class _EditorPageState extends State<EditorPage> {
   }
 
   Widget _buildEditorSection() {
-    return BlocListener<EditorBloc, EditorState>(
-      listenWhen: (prev, curr) => prev.corrections != curr.corrections,
-      listener: (context, state) {
-        final active = state.corrections
-            .where((c) => !c.isAccepted && !c.isDismissed)
-            .toList();
-        _textController.updateCorrections(active);
-      },
+    return MultiBlocListener(
+      listeners: [
+        BlocListener<EditorBloc, EditorState>(
+          listenWhen: (prev, curr) => prev.text != curr.text,
+          listener: (context, state) => _syncControllerText(state.text),
+        ),
+        BlocListener<EditorBloc, EditorState>(
+          listenWhen: (prev, curr) => prev.corrections != curr.corrections,
+          listener: (context, state) {
+            final active = state.corrections
+                .where((c) => !c.isAccepted && !c.isDismissed)
+                .toList();
+            _textController.updateCorrections(active);
+          },
+        ),
+      ],
       child: Column(
         children: [
           // Stats bar
@@ -367,8 +393,6 @@ class _EditorPageState extends State<EditorPage> {
               .toList(),
           onAccept: (correction) {
             _editorBloc!.add(CorrectionAccepted(correction: correction));
-            // Update text controller
-            _textController.text = _editorBloc!.state.text;
           },
           onDismiss: (correction) {
             _editorBloc!.add(CorrectionDismissed(correction: correction));
