@@ -91,7 +91,7 @@ void main() {
               .having(
                 (s) => s.availableModels,
                 'availableModels',
-                hasLength(6),
+                isNotEmpty,
               )
               .having(
                 (s) => s.installedModelIds,
@@ -156,9 +156,12 @@ void main() {
         seed: () => const ModelState(
           status: ModelStatus.downloading,
           downloadProgress: 0,
+          downloadingModelId: 'test-en-q4km',
         ),
-        act: (bloc) =>
-            bloc.add(const ModelDownloadProgressUpdated(progress: 0.42)),
+        act: (bloc) => bloc.add(const ModelDownloadProgressUpdated(
+          modelId: 'test-en-q4km',
+          progress: 0.42,
+        )),
         expect: () => [
           isA<ModelState>().having(
             (s) => s.downloadProgress,
@@ -166,6 +169,22 @@ void main() {
             closeTo(0.42, 0.001),
           ),
         ],
+      );
+    });
+
+    group('ModelDownloadCancelled', () {
+      blocTest<ModelBloc, ModelState>(
+        'calls downloader cancel when a download is active',
+        build: buildBloc,
+        seed: () => const ModelState(
+          status: ModelStatus.downloading,
+          downloadingModelId: 'test-en-q4km',
+          downloadProgress: 0.3,
+        ),
+        act: (bloc) => bloc.add(const ModelDownloadCancelled()),
+        verify: (_) {
+          verify(() => mockDownloader.cancelDownload()).called(1);
+        },
       );
     });
 

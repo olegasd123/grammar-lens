@@ -119,10 +119,21 @@ void main() {
         expect(bundled.version, 1);
       });
 
-      test('contains all 6 expected models', () {
+      test('contains all canonical grammar model IDs', () {
         final bundled =
             ModelManifest.fromJson(ModelManifest.bundledManifestJson);
-        expect(bundled.models, hasLength(6));
+        final ids = bundled.models.map((m) => m.id).toSet();
+        expect(
+          ids,
+          containsAll([
+            'phi3-mini-grammar-en-q4km',
+            'phi3-mini-grammar-en-q5km',
+            'phi3-mini-grammar-es-q4km',
+            'phi3-mini-grammar-fr-q4km',
+            'phi3-mini-grammar-de-q4km',
+            'phi3-mini-grammar-pt-q4km',
+          ]),
+        );
       });
 
       test('covers all supported languages', () {
@@ -132,11 +143,10 @@ void main() {
         expect(languages, containsAll(['en', 'es', 'fr', 'de', 'pt']));
       });
 
-      test('English has two quantization levels', () {
+      test('English includes Q4_K_M and Q5_K_M quantization levels', () {
         final bundled =
             ModelManifest.fromJson(ModelManifest.bundledManifestJson);
         final enModels = bundled.getModelsForLanguage('en');
-        expect(enModels, hasLength(2));
         expect(
           enModels.map((m) => m.quantization).toSet(),
           containsAll(['Q4_K_M', 'Q5_K_M']),

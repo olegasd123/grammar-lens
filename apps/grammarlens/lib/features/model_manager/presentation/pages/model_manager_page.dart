@@ -61,10 +61,11 @@ class ModelManagerPage extends StatelessWidget {
                         state.installedModelIds.contains(model.id);
                     final isActive = state.activeModel?.id == model.id;
                     final isDownloading =
-                        state.status == ModelStatus.downloading && !isInstalled;
+                        state.status == ModelStatus.downloading &&
+                            state.downloadingModelId == model.id;
 
                     ModelTileState tileState;
-                    if (isDownloading && models.length == 1) {
+                    if (isDownloading) {
                       tileState = ModelTileState.downloading;
                     } else if (isInstalled) {
                       tileState = ModelTileState.installed;
@@ -87,6 +88,13 @@ class ModelManagerPage extends StatelessWidget {
                                 ModelDownloadRequested(model: model),
                               );
                         },
+                        onCancel: isDownloading
+                            ? () {
+                                context.read<ModelBloc>().add(
+                                      const ModelDownloadCancelled(),
+                                    );
+                              }
+                            : null,
                         onSetActive: () {
                           context.read<ModelBloc>().add(
                                 ModelLoadRequested(model: model),

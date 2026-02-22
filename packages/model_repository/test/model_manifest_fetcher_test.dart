@@ -10,6 +10,8 @@ class MockClient extends Mock implements http.Client {}
 void main() {
   late MockClient mockClient;
   late ModelManifestFetcher fetcher;
+  final bundledManifest =
+      ModelManifest.fromJson(ModelManifest.bundledManifestJson);
 
   final testManifestJson = {
     'version': 2,
@@ -44,12 +46,12 @@ void main() {
     test('fetches and parses remote manifest', () async {
       when(() => mockClient.get(any(), headers: any(named: 'headers')))
           .thenAnswer(
-            (_) async => http.Response(
-              jsonEncode(testManifestJson),
-              200,
-              headers: {'etag': '"v2"'},
-            ),
-          );
+        (_) async => http.Response(
+          jsonEncode(testManifestJson),
+          200,
+          headers: {'etag': '"v2"'},
+        ),
+      );
 
       final manifest = await fetcher.fetchManifest();
 
@@ -62,12 +64,12 @@ void main() {
       // First fetch — populate cache
       when(() => mockClient.get(any(), headers: any(named: 'headers')))
           .thenAnswer(
-            (_) async => http.Response(
-              jsonEncode(testManifestJson),
-              200,
-              headers: {'etag': '"v2"'},
-            ),
-          );
+        (_) async => http.Response(
+          jsonEncode(testManifestJson),
+          200,
+          headers: {'etag': '"v2"'},
+        ),
+      );
 
       await fetcher.fetchManifest();
 
@@ -88,7 +90,11 @@ void main() {
       final manifest = await fetcher.fetchManifest();
 
       // Should be the bundled manifest
-      expect(manifest.models, hasLength(6));
+      expect(manifest.version, bundledManifest.version);
+      expect(
+        manifest.models.map((m) => m.id).toSet(),
+        bundledManifest.models.map((m) => m.id).toSet(),
+      );
     });
 
     test('falls back to bundled manifest on network error', () async {
@@ -98,19 +104,23 @@ void main() {
       final manifest = await fetcher.fetchManifest();
 
       // Should be the bundled manifest
-      expect(manifest.models, hasLength(6));
+      expect(manifest.version, bundledManifest.version);
+      expect(
+        manifest.models.map((m) => m.id).toSet(),
+        bundledManifest.models.map((m) => m.id).toSet(),
+      );
     });
 
     test('falls back to cached manifest if available on error', () async {
       // First fetch — populate cache
       when(() => mockClient.get(any(), headers: any(named: 'headers')))
           .thenAnswer(
-            (_) async => http.Response(
-              jsonEncode(testManifestJson),
-              200,
-              headers: {'etag': '"v2"'},
-            ),
-          );
+        (_) async => http.Response(
+          jsonEncode(testManifestJson),
+          200,
+          headers: {'etag': '"v2"'},
+        ),
+      );
 
       await fetcher.fetchManifest();
 
@@ -128,12 +138,12 @@ void main() {
     test('sends If-None-Match header after first fetch', () async {
       when(() => mockClient.get(any(), headers: any(named: 'headers')))
           .thenAnswer(
-            (_) async => http.Response(
-              jsonEncode(testManifestJson),
-              200,
-              headers: {'etag': '"v2"'},
-            ),
-          );
+        (_) async => http.Response(
+          jsonEncode(testManifestJson),
+          200,
+          headers: {'etag': '"v2"'},
+        ),
+      );
 
       await fetcher.fetchManifest();
 
@@ -159,7 +169,11 @@ void main() {
       final manifest = await fetcher.fetchManifest();
 
       // Should fall back to bundled
-      expect(manifest.models, hasLength(6));
+      expect(manifest.version, bundledManifest.version);
+      expect(
+        manifest.models.map((m) => m.id).toSet(),
+        bundledManifest.models.map((m) => m.id).toSet(),
+      );
     });
 
     test('defaultManifestUrl points to GitHub Releases', () {

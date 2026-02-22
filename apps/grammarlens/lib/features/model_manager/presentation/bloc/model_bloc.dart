@@ -41,6 +41,7 @@ class ModelBloc extends Bloc<ModelEvent, ModelState> {
     on<ModelLoadRequested>(_onLoadRequested);
     on<ModelUnloadRequested>(_onUnloadRequested);
     on<ModelDownloadRequested>(_onDownloadRequested);
+    on<ModelDownloadCancelled>(_onDownloadCancelled);
     on<ModelDeleteRequested>(_onDeleteRequested);
     on<ModelDownloadProgressUpdated>(_onProgressUpdated);
   }
@@ -70,6 +71,7 @@ class ModelBloc extends Bloc<ModelEvent, ModelState> {
         status: ModelStatus.noModel,
         availableModels: manifest.models,
         installedModelIds: installedIds,
+        clearDownloadingModelId: true,
       ));
 
       // Auto-load if there's an active model
@@ -81,6 +83,7 @@ class ModelBloc extends Bloc<ModelEvent, ModelState> {
       emit(state.copyWith(
         status: ModelStatus.error,
         errorMessage: e.toString(),
+        clearDownloadingModelId: true,
       ));
     }
   }
@@ -113,6 +116,7 @@ class ModelBloc extends Bloc<ModelEvent, ModelState> {
       emit(state.copyWith(
         status: ModelStatus.ready,
         activeModel: event.model,
+        errorMessage: null,
       ));
 
       _log.info('Model loaded successfully: ${event.model.id}');
@@ -123,7 +127,7 @@ class ModelBloc extends Bloc<ModelEvent, ModelState> {
 
       emit(state.copyWith(
         status: ModelStatus.error,
-        errorMessage: 'Failed to load model: $e',
+        errorMessage: _formatLoadError(e),
       ));
     }
   }
@@ -140,6 +144,7 @@ class ModelBloc extends Bloc<ModelEvent, ModelState> {
     emit(state.copyWith(
       status: ModelStatus.noModel,
       clearActiveModel: true,
+      clearDownloadingModelId: true,
     ));
   }
 
@@ -147,21 +152,35 @@ class ModelBloc extends Bloc<ModelEvent, ModelState> {
     ModelDownloadRequested event,
     Emitter<ModelState> emit,
   ) async {
+    if (state.status == ModelStatus.downloading) {
+      _log.warning(
+        'Ignoring download request for ${event.model.id} because '
+        '${state.downloadingModelId} is already downloading',
+      );
+      return;
+    }
+
     _log.info('Downloading model: ${event.model.id}');
 
     emit(state.copyWith(
       status: ModelStatus.downloading,
       downloadProgress: 0,
+      downloadingModelId: event.model.id,
+      errorMessage: null,
     ));
 
+    var destPath = '';
     try {
-      final destPath = await _storage.getModelPath(event.model.id);
+      destPath = await _storage.getModelPath(event.model.id);
 
       await _downloader.download(
         event.model,
         destPath,
         onProgress: (progress) {
-          add(ModelDownloadProgressUpdated(progress: progress));
+          add(ModelDownloadProgressUpdated(
+            modelId: event.model.id,
+            progress: progress,
+          ));
         },
       );
 
@@ -183,6 +202,7 @@ class ModelBloc extends Bloc<ModelEvent, ModelState> {
             errorMessage:
                 'Integrity check failed for ${event.model.displayName}. '
                 'The file may be corrupted. Please try again.',
+            clearDownloadingModelId: true,
           ));
           return;
         }
@@ -202,19 +222,38 @@ class ModelBloc extends Bloc<ModelEvent, ModelState> {
         status: ModelStatus.noModel,
         installedModelIds: updatedInstalled,
         downloadProgress: 1.0,
+        clearDownloadingModelId: true,
+        errorMessage: null,
       ));
 
       _log.info('Download complete: ${event.model.id}');
-
-      // Auto-load the downloaded model
-      add(ModelLoadRequested(model: event.model));
+    } on ModelDownloadCancelledException {
+      _log.info('Download cancelled: ${event.model.id}');
+      emit(state.copyWith(
+        status: ModelStatus.noModel,
+        downloadProgress: 0,
+        clearDownloadingModelId: true,
+      ));
     } catch (e) {
       _log.severe('Download failed: $e');
       emit(state.copyWith(
         status: ModelStatus.error,
         errorMessage: 'Download failed: $e',
+        clearDownloadingModelId: true,
       ));
     }
+  }
+
+  void _onDownloadCancelled(
+    ModelDownloadCancelled event,
+    Emitter<ModelState> emit,
+  ) {
+    if (state.status != ModelStatus.downloading) {
+      return;
+    }
+
+    _log.info('Cancelling download: ${state.downloadingModelId}');
+    _downloader.cancelDownload();
   }
 
   Future<void> _onDeleteRequested(
@@ -248,7 +287,21 @@ class ModelBloc extends Bloc<ModelEvent, ModelState> {
     ModelDownloadProgressUpdated event,
     Emitter<ModelState> emit,
   ) {
+    if (state.downloadingModelId != event.modelId) {
+      return;
+    }
     emit(state.copyWith(downloadProgress: event.progress));
+  }
+
+  String _formatLoadError(Object error) {
+    final raw = error.toString();
+    if (raw.contains('llama_inference_native.framework') ||
+        raw.contains('libllama_inference_native.so') ||
+        raw.contains('llama_inference_native.dll')) {
+      return 'Native inference library is missing. '
+          'Build and embed llama_inference native binaries, then restart.';
+    }
+    return 'Failed to load model: $raw';
   }
 
   @override

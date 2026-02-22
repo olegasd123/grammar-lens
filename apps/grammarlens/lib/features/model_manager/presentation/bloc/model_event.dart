@@ -27,6 +27,11 @@ class ModelDownloadRequested extends ModelEvent {
   const ModelDownloadRequested({required this.model});
 }
 
+/// User requested to cancel the active model download.
+class ModelDownloadCancelled extends ModelEvent {
+  const ModelDownloadCancelled();
+}
+
 /// User requested to delete a downloaded model.
 class ModelDeleteRequested extends ModelEvent {
   final ModelInfo model;
@@ -35,6 +40,10 @@ class ModelDeleteRequested extends ModelEvent {
 
 /// Download progress update (internal).
 class ModelDownloadProgressUpdated extends ModelEvent {
+  final String modelId;
   final double progress;
-  const ModelDownloadProgressUpdated({required this.progress});
+  const ModelDownloadProgressUpdated({
+    required this.modelId,
+    required this.progress,
+  });
 }

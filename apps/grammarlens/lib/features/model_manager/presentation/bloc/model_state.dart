@@ -41,6 +41,9 @@ class ModelState {
   /// Download progress (0.0 - 1.0) when status is [ModelStatus.downloading].
   final double downloadProgress;
 
+  /// Model ID currently being downloaded, if any.
+  final String? downloadingModelId;
+
   /// Error message if status is [ModelStatus.error].
   final String? errorMessage;
 
@@ -50,6 +53,7 @@ class ModelState {
     this.installedModelIds = const {},
     this.activeModel,
     this.downloadProgress = 0,
+    this.downloadingModelId,
     this.errorMessage,
   });
 
@@ -63,6 +67,8 @@ class ModelState {
     ModelInfo? activeModel,
     bool clearActiveModel = false,
     double? downloadProgress,
+    String? downloadingModelId,
+    bool clearDownloadingModelId = false,
     String? errorMessage,
   }) {
     return ModelState(
@@ -71,6 +77,9 @@ class ModelState {
       installedModelIds: installedModelIds ?? this.installedModelIds,
       activeModel: clearActiveModel ? null : (activeModel ?? this.activeModel),
       downloadProgress: downloadProgress ?? this.downloadProgress,
+      downloadingModelId: clearDownloadingModelId
+          ? null
+          : (downloadingModelId ?? this.downloadingModelId),
       errorMessage: errorMessage ?? this.errorMessage,
     );
   }

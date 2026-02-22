@@ -37,6 +37,8 @@ final _log = Logger('IsolateInference');
 class IsolateInference {
   Isolate? _isolate;
   SendPort? _commandPort;
+  ReceivePort? _receivePort;
+  StreamSubscription<dynamic>? _receiveSub;
   final _responseController = StreamController<_IsolateMessage>.broadcast();
   bool _isInitialized = false;
 
@@ -60,33 +62,52 @@ class IsolateInference {
     _log.info('Initializing isolate inference engine');
 
     final receivePort = ReceivePort();
+    _receivePort = receivePort;
 
-    _isolate = await Isolate.spawn(
-      _isolateEntryPoint,
-      _InitMessage(
-        sendPort: receivePort.sendPort,
-        modelPath: modelPath,
-        contextSize: contextSize,
-        gpuLayers: gpuLayers,
-        gpuBackend: gpuBackend ?? GpuBackendDetector.detect(),
-      ),
-    );
+    final commandPortCompleter = Completer<SendPort>();
+    final initCompleter = Completer<void>();
 
-    // Wait for the isolate to send back its command port
-    final completer = Completer<SendPort>();
-
-    receivePort.listen((message) {
-      if (message is SendPort && !completer.isCompleted) {
-        completer.complete(message);
+    _receiveSub = receivePort.listen((message) {
+      if (message is SendPort && !commandPortCompleter.isCompleted) {
+        commandPortCompleter.complete(message);
+      } else if (message is _InitSucceeded && !initCompleter.isCompleted) {
+        initCompleter.complete();
+      } else if (message is _InitFailed && !initCompleter.isCompleted) {
+        initCompleter.completeError(
+          InferenceException(message.error),
+        );
       } else if (message is _IsolateMessage) {
         _responseController.add(message);
       }
     });
 
-    _commandPort = await completer.future;
-    _isInitialized = true;
+    try {
+      _isolate = await Isolate.spawn(
+        _isolateEntryPoint,
+        _InitMessage(
+          sendPort: receivePort.sendPort,
+          modelPath: modelPath,
+          contextSize: contextSize,
+          gpuLayers: gpuLayers,
+          gpuBackend: gpuBackend ?? GpuBackendDetector.detect(),
+        ),
+      );
 
-    _log.info('Isolate inference engine initialized');
+      _commandPort = await commandPortCompleter.future;
+      await initCompleter.future.timeout(const Duration(seconds: 30));
+      _isInitialized = true;
+      _log.info('Isolate inference engine initialized');
+    } catch (_) {
+      _commandPort = null;
+      _isInitialized = false;
+      await _receiveSub?.cancel();
+      _receiveSub = null;
+      _receivePort?.close();
+      _receivePort = null;
+      _isolate?.kill(priority: Isolate.immediate);
+      _isolate = null;
+      rethrow;
+    }
   }
 
   /// Run a complete inference and return the full result.
@@ -175,6 +196,10 @@ class IsolateInference {
     _isolate?.kill(priority: Isolate.immediate);
     _isolate = null;
     _commandPort = null;
+    _receiveSub?.cancel();
+    _receiveSub = null;
+    _receivePort?.close();
+    _receivePort = null;
     _isInitialized = false;
     _responseController.close();
   }
@@ -203,36 +228,49 @@ Future<void> _isolateEntryPoint(_InitMessage init) async {
     'Worker isolate started. Loading model: ${init.modelPath}',
   );
 
-  // Initialize backend and load model
-  final bindings = LlamaBindings.instance;
-  bindings.backendInit();
-
-  late final LlamaModel model;
-  late final LlamaContext context;
+  LlamaBindings? bindings;
+  LlamaModel? model;
+  LlamaContext? context;
+  var backendInitialized = false;
 
   try {
-    model = await LlamaModel.load(
+    // This may throw when native dynamic library is not available.
+    bindings = LlamaBindings.instance;
+    bindings.backendInit();
+    backendInitialized = true;
+
+    final createdModel = await LlamaModel.load(
       init.modelPath,
       gpuLayers: init.gpuLayers,
       gpuBackend: init.gpuBackend,
     );
+    model = createdModel;
     context = LlamaContext.create(
-      model,
+      createdModel,
       contextSize: init.contextSize,
     );
+    init.sendPort.send(const _InitSucceeded());
   } catch (e) {
     _log.severe('Failed to initialize model: $e');
-    init.sendPort.send(_ErrorResult(requestId: 0, error: e.toString()));
-    bindings.backendFree();
+    init.sendPort.send(_InitFailed(error: e.toString()));
+    context?.dispose();
+    model?.dispose();
+    if (backendInitialized) {
+      bindings?.backendFree();
+    }
     return;
   }
+
+  final loadedModel = model;
+  final loadedContext = context;
+  final loadedBindings = bindings;
 
   // Process requests
   await for (final message in commandPort) {
     if (message is _CompleteRequest) {
       try {
-        context.reset();
-        final result = await context.complete(
+        loadedContext.reset();
+        final result = await loadedContext.complete(
           message.prompt,
           config: message.config,
         );
@@ -252,8 +290,8 @@ Future<void> _isolateEntryPoint(_InitMessage init) async {
       }
     } else if (message is _StreamRequest) {
       try {
-        context.reset();
-        await for (final token in context.completeStream(
+        loadedContext.reset();
+        await for (final token in loadedContext.completeStream(
           message.prompt,
           config: message.config,
         )) {
@@ -275,9 +313,9 @@ Future<void> _isolateEntryPoint(_InitMessage init) async {
     } else if (message is _CancelRequest) {
       _log.fine('Cancel request received for ${message.requestId}');
     } else if (message is _ShutdownRequest) {
-      context.dispose();
-      model.dispose();
-      bindings.backendFree();
+      loadedContext.dispose();
+      loadedModel.dispose();
+      loadedBindings.backendFree();
       _log.info('Worker isolate shutting down');
       break;
     }
@@ -300,6 +338,15 @@ class _InitMessage {
     required this.gpuLayers,
     required this.gpuBackend,
   });
+}
+
+class _InitSucceeded {
+  const _InitSucceeded();
+}
+
+class _InitFailed {
+  final String error;
+  const _InitFailed({required this.error});
 }
 
 abstract class _IsolateMessage {

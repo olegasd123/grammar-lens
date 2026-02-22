@@ -18,7 +18,8 @@ class ModelStatusBar extends StatelessWidget {
     return BlocBuilder<ModelBloc, ModelState>(
       buildWhen: (prev, curr) =>
           prev.status != curr.status ||
-          prev.downloadProgress != curr.downloadProgress,
+          prev.downloadProgress != curr.downloadProgress ||
+          prev.downloadingModelId != curr.downloadingModelId,
       builder: (context, state) {
         return switch (state.status) {
           ModelStatus.initial => const SizedBox.shrink(),
@@ -56,7 +57,8 @@ class _NoModelBanner extends StatelessWidget {
       color: AppColors.styleBlue.withValues(alpha: 0.08),
       child: Row(
         children: [
-          const Icon(Icons.download_rounded, size: 20, color: AppColors.styleBlue),
+          const Icon(Icons.download_rounded,
+              size: 20, color: AppColors.styleBlue),
           const SizedBox(width: 12),
           Expanded(
             child: Text(
@@ -100,6 +102,11 @@ class _DownloadingBanner extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final percent = (state.downloadProgress * 100).toStringAsFixed(0);
+    final downloadingModel = state.availableModels.where(
+      (m) => m.id == state.downloadingModelId,
+    );
+    final modelName =
+        downloadingModel.isEmpty ? 'model' : downloadingModel.first.displayName;
 
     return Container(
       width: double.infinity,
@@ -118,7 +125,7 @@ class _DownloadingBanner extends StatelessWidget {
               ),
               const SizedBox(width: 12),
               Text(
-                'Downloading model... $percent%',
+                'Downloading $modelName... $percent%',
                 style: AppTypography.bodySmall,
               ),
             ],
