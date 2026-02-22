@@ -7,13 +7,19 @@ import 'dart:ffi';
 import 'dart:io' show Platform;
 
 import 'package:ffi/ffi.dart';
+import 'package:path/path.dart' as p;
 
 // ── Native library loader ────────────────────────────────────────────────────
 
 /// Loads the platform-specific native library.
 DynamicLibrary _loadLibrary() {
-  if (Platform.isMacOS || Platform.isIOS) {
-    return DynamicLibrary.open('llama_inference_native.framework/llama_inference_native');
+  if (Platform.isMacOS) {
+    return _loadMacOsLibrary();
+  }
+  if (Platform.isIOS) {
+    return DynamicLibrary.open(
+      'llama_inference_native.framework/llama_inference_native',
+    );
   }
   if (Platform.isAndroid || Platform.isLinux) {
     return DynamicLibrary.open('libllama_inference_native.so');
@@ -22,6 +28,42 @@ DynamicLibrary _loadLibrary() {
     return DynamicLibrary.open('llama_inference_native.dll');
   }
   throw UnsupportedError('Unsupported platform: ${Platform.operatingSystem}');
+}
+
+DynamicLibrary _loadMacOsLibrary() {
+  final executableDir = p.dirname(Platform.resolvedExecutable);
+  final appFrameworksDir =
+      p.normalize(p.join(executableDir, '..', 'Frameworks'));
+
+  final candidates = <String>[
+    // Legacy bundle location.
+    'llama_inference_native.framework/llama_inference_native',
+    // Standard dylib placement in app frameworks.
+    p.join(appFrameworksDir, 'libllama_inference_native.dylib'),
+    // dylib nested inside the Flutter plugin framework.
+    p.join(
+      appFrameworksDir,
+      'llama_inference.framework',
+      'Versions',
+      'A',
+      'Frameworks',
+      'libllama_inference_native.dylib',
+    ),
+  ];
+
+  Object? lastError;
+  for (final candidate in candidates) {
+    try {
+      return DynamicLibrary.open(candidate);
+    } catch (e) {
+      lastError = e;
+    }
+  }
+
+  throw ArgumentError(
+    'Failed to load native library on macOS. Tried: ${candidates.join(', ')}. '
+    'Last error: $lastError',
+  );
 }
 
 /// The loaded native library. Lazily initialized.
@@ -185,81 +227,81 @@ class LlamaBindings {
 
   // ── Model ──
 
-  final modelLoad = _lib
-      .lookupFunction<_GLModelLoadC, _GLModelLoadDart>('gl_model_load');
+  final modelLoad =
+      _lib.lookupFunction<_GLModelLoadC, _GLModelLoadDart>('gl_model_load');
 
-  final modelFree = _lib
-      .lookupFunction<_GLModelFreeC, _GLModelFreeDart>('gl_model_free');
+  final modelFree =
+      _lib.lookupFunction<_GLModelFreeC, _GLModelFreeDart>('gl_model_free');
 
-  final modelNCtxTrain = _lib
-      .lookupFunction<_GLModelNCtxTrainC, _GLModelNCtxTrainDart>(
+  final modelNCtxTrain =
+      _lib.lookupFunction<_GLModelNCtxTrainC, _GLModelNCtxTrainDart>(
           'gl_model_n_ctx_train');
 
   final modelNLayer = _lib
       .lookupFunction<_GLModelNLayerC, _GLModelNLayerDart>('gl_model_n_layer');
 
-  final modelSize = _lib
-      .lookupFunction<_GLModelSizeC, _GLModelSizeDart>('gl_model_size');
+  final modelSize =
+      _lib.lookupFunction<_GLModelSizeC, _GLModelSizeDart>('gl_model_size');
 
-  final modelDesc = _lib
-      .lookupFunction<_GLModelDescC, _GLModelDescDart>('gl_model_desc');
+  final modelDesc =
+      _lib.lookupFunction<_GLModelDescC, _GLModelDescDart>('gl_model_desc');
 
   // ── Context ──
 
-  final contextCreate = _lib
-      .lookupFunction<_GLContextCreateC, _GLContextCreateDart>(
+  final contextCreate =
+      _lib.lookupFunction<_GLContextCreateC, _GLContextCreateDart>(
           'gl_context_create');
 
   final contextFree = _lib
       .lookupFunction<_GLContextFreeC, _GLContextFreeDart>('gl_context_free');
 
-  final contextKvCacheClear = _lib
-      .lookupFunction<_GLContextKvCacheClearC, _GLContextKvCacheClearDart>(
+  final contextKvCacheClear =
+      _lib.lookupFunction<_GLContextKvCacheClearC, _GLContextKvCacheClearDart>(
           'gl_context_kv_cache_clear');
 
   // ── Tokenization ──
 
-  final tokenize = _lib
-      .lookupFunction<_GLTokenizeC, _GLTokenizeDart>('gl_tokenize');
+  final tokenize =
+      _lib.lookupFunction<_GLTokenizeC, _GLTokenizeDart>('gl_tokenize');
 
-  final tokenToPiece = _lib
-      .lookupFunction<_GLTokenToPieceC, _GLTokenToPieceDart>(
+  final tokenToPiece =
+      _lib.lookupFunction<_GLTokenToPieceC, _GLTokenToPieceDart>(
           'gl_token_to_piece');
 
-  final tokenIsEog = _lib
-      .lookupFunction<_GLTokenIsEogC, _GLTokenIsEogDart>('gl_token_is_eog');
+  final tokenIsEog =
+      _lib.lookupFunction<_GLTokenIsEogC, _GLTokenIsEogDart>('gl_token_is_eog');
 
-  final tokenBos = _lib
-      .lookupFunction<_GLTokenBosC, _GLTokenBosDart>('gl_token_bos');
+  final tokenBos =
+      _lib.lookupFunction<_GLTokenBosC, _GLTokenBosDart>('gl_token_bos');
 
-  final tokenEos = _lib
-      .lookupFunction<_GLTokenEosC, _GLTokenEosDart>('gl_token_eos');
+  final tokenEos =
+      _lib.lookupFunction<_GLTokenEosC, _GLTokenEosDart>('gl_token_eos');
 
   // ── Decoding ──
 
   final decodeBatch = _lib
       .lookupFunction<_GLDecodeBatchC, _GLDecodeBatchDart>('gl_decode_batch');
 
-  final decodeSingle = _lib
-      .lookupFunction<_GLDecodeSingleC, _GLDecodeSingleDart>(
+  final decodeSingle =
+      _lib.lookupFunction<_GLDecodeSingleC, _GLDecodeSingleDart>(
           'gl_decode_single');
 
   // ── Sampling ──
 
-  final samplerCreate = _lib
-      .lookupFunction<_GLSamplerCreateC, _GLSamplerCreateDart>(
+  final samplerCreate =
+      _lib.lookupFunction<_GLSamplerCreateC, _GLSamplerCreateDart>(
           'gl_sampler_create');
 
-  final samplerSample = _lib
-      .lookupFunction<_GLSamplerSampleC, _GLSamplerSampleDart>(
+  final samplerSample =
+      _lib.lookupFunction<_GLSamplerSampleC, _GLSamplerSampleDart>(
           'gl_sampler_sample');
 
-  final samplerAccept = _lib
-      .lookupFunction<_GLSamplerAcceptC, _GLSamplerAcceptDart>(
+  final samplerAccept =
+      _lib.lookupFunction<_GLSamplerAcceptC, _GLSamplerAcceptDart>(
           'gl_sampler_accept');
 
-  final samplerReset = _lib
-      .lookupFunction<_GLSamplerResetC, _GLSamplerResetDart>(
+  final samplerReset =
+      _lib.lookupFunction<_GLSamplerResetC, _GLSamplerResetDart>(
           'gl_sampler_reset');
 
   final samplerFree = _lib
@@ -270,17 +312,17 @@ class LlamaBindings {
   final contextPerf = _lib
       .lookupFunction<_GLContextPerfC, _GLContextPerfDart>('gl_context_perf');
 
-  final contextPerfReset = _lib
-      .lookupFunction<_GLContextPerfResetC, _GLContextPerfResetDart>(
+  final contextPerfReset =
+      _lib.lookupFunction<_GLContextPerfResetC, _GLContextPerfResetDart>(
           'gl_context_perf_reset');
 
   // ── GPU Detection ──
 
-  final detectGpu = _lib
-      .lookupFunction<_GLDetectGpuC, _GLDetectGpuDart>('gl_detect_gpu');
+  final detectGpu =
+      _lib.lookupFunction<_GLDetectGpuC, _GLDetectGpuDart>('gl_detect_gpu');
 
   // ── System Info ──
 
-  final systemInfo = _lib
-      .lookupFunction<_GLSystemInfoC, _GLSystemInfoDart>('gl_system_info');
+  final systemInfo =
+      _lib.lookupFunction<_GLSystemInfoC, _GLSystemInfoDart>('gl_system_info');
 }

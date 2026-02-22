@@ -26,7 +26,7 @@ EXTERNAL SOURCES:
 
 SPEC CHECKSUMS:
   FlutterMacOS: d0db08ddef1a9af05a5ec4b724367152bb0500b1
-  llama_inference: 7ba414595431506337425c3c8507fddcf0065381
+  llama_inference: d59319bbaddbb64a2dc9abce92547c7ce7c64e73
   platform_integration: bec0121935f27230275f797152b4b2c0ffbb249d
   shared_preferences_foundation: 7036424c3d8ec98dfe75ff1667cb0cd531ec82bb
 
