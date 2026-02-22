@@ -56,16 +56,16 @@ Future<void> configureDependencies() async {
 
   // ── Platform Services ──────────────────────────────────────────────────
 
-  getIt.registerLazySingleton<ClipboardService>(
-    () => const ClipboardService(),
-  );
   getIt.registerLazySingleton<GlobalHotkeyService>(
     GlobalHotkeyService.new,
   );
 
-  // ── macOS Accessibility ────────────────────────────────────────────────
+  // ── macOS ────────────────────────────────────────────────────────────
 
   if (Platform.isMacOS) {
+    getIt.registerLazySingleton<ClipboardService>(
+      MacosClipboardService.new,
+    );
     getIt.registerLazySingleton<MacosAccessibilityChannel>(
       MacosAccessibilityChannel.new,
     );
@@ -83,6 +83,10 @@ Future<void> configureDependencies() async {
       () => ExternalCheckBloc(
         accessibilityService: getIt<AccessibilityService>(),
       ),
+    );
+  } else {
+    getIt.registerLazySingleton<ClipboardService>(
+      ClipboardService.new,
     );
   }
 }

@@ -3,16 +3,19 @@ import Cocoa
 
 /// Entry point for the platform_integration macOS plugin.
 ///
-/// Registers two MethodChannels:
+/// Registers three MethodChannels:
 /// - `com.grammarlens/accessibility` — AXUIElement-based text field access
 /// - `com.grammarlens/hotkey` — global hotkey registration via NSEvent
+/// - `com.grammarlens/clipboard` — system clipboard change monitoring
 public class PlatformIntegrationPlugin: NSObject, FlutterPlugin {
 
     private var accessibilityBridge: AccessibilityBridge?
     private var hotkeyManager: HotkeyManager?
+    private var clipboardMonitor: ClipboardMonitor?
 
     private var accessibilityChannel: FlutterMethodChannel?
     private var hotkeyChannel: FlutterMethodChannel?
+    private var clipboardChannel: FlutterMethodChannel?
 
     public static func register(with registrar: FlutterPluginRegistrar) {
         let instance = PlatformIntegrationPlugin()
@@ -34,6 +37,15 @@ public class PlatformIntegrationPlugin: NSObject, FlutterPlugin {
         instance.hotkeyChannel = hkChannel
         instance.hotkeyManager = HotkeyManager(channel: hkChannel)
         registrar.addMethodCallDelegate(instance, channel: hkChannel)
+
+        // Clipboard channel
+        let cbChannel = FlutterMethodChannel(
+            name: "com.grammarlens/clipboard",
+            binaryMessenger: registrar.messenger
+        )
+        instance.clipboardChannel = cbChannel
+        instance.clipboardMonitor = ClipboardMonitor(channel: cbChannel)
+        registrar.addMethodCallDelegate(instance, channel: cbChannel)
     }
 
     public func handle(_ call: FlutterMethodCall, result: @escaping FlutterResult) {
@@ -81,6 +93,13 @@ public class PlatformIntegrationPlugin: NSObject, FlutterPlugin {
         case "unregisterHotkey":
             let shortcut = (call.arguments as? [String: Any])?["shortcut"] as? String ?? ""
             hotkeyManager?.unregisterHotkey(shortcut: shortcut, result: result)
+
+        // ── Clipboard ──────────────────────────────────────────────────────
+        case "startMonitoring":
+            clipboardMonitor?.startMonitoring(result: result)
+
+        case "stopMonitoring":
+            clipboardMonitor?.stopMonitoring(result: result)
 
         default:
             result(FlutterMethodNotImplemented)

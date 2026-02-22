@@ -4,8 +4,15 @@ import 'package:flutter/services.dart';
 ///
 /// Provides a unified API for reading/writing the system clipboard
 /// with change notifications where supported.
+///
+/// Platform-specific subclasses override [onClipboardChanged] to
+/// provide native clipboard monitoring:
+/// - macOS: [MacosClipboardService] using NSPasteboard changeCount polling
+/// - Windows: AddClipboardFormatListener (future)
+/// - Linux: X11 selection notifications (future)
+/// - iOS/Android: Not reliably supported
 class ClipboardService {
-  const ClipboardService();
+  ClipboardService();
 
   /// Read text from the system clipboard.
   ///
@@ -22,16 +29,16 @@ class ClipboardService {
 
   /// Watch for clipboard changes.
   ///
-  /// Note: Clipboard change monitoring is not supported on all platforms.
+  /// Emits the new clipboard text whenever it changes.
   /// On unsupported platforms, this stream never emits.
   ///
-  /// TODO: Implement platform-specific clipboard monitoring:
-  /// - macOS: NSPasteboard changeCount polling
-  /// - Windows: AddClipboardFormatListener
-  /// - Linux: X11 selection notifications
-  /// - iOS/Android: Not reliably supported
+  /// Override in platform-specific subclasses to provide native monitoring.
   Stream<String> onClipboardChanged() {
-    // Placeholder — will be implemented per-platform
     return const Stream.empty();
   }
+
+  /// Release resources used by clipboard monitoring.
+  ///
+  /// Subclasses should override to stop native polling / listeners.
+  void dispose() {}
 }
