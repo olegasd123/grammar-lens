@@ -2,6 +2,8 @@ import 'dart:io';
 
 import 'package:logging/logging.dart';
 
+import 'gpu_backend.dart';
+
 final _log = Logger('MemoryManager');
 
 /// Monitors and manages memory usage for model inference.
@@ -13,9 +15,44 @@ class MemoryManager {
 
   /// Estimate available memory for model loading (in bytes).
   ///
-  /// On mobile, this accounts for the app's memory budget.
-  /// On desktop, this looks at total system RAM.
+  /// Uses real system memory from native probing when available.
+  /// On mobile, applies a conservative headroom (~60% of physical RAM).
+  /// On desktop, applies a larger budget (~80% of physical RAM).
+  /// Falls back to hardcoded estimates if native probing is unavailable.
   static Future<int> estimateAvailableMemory() async {
+    final gpuInfo = GpuBackendDetector.probeGpuInfo();
+
+    if (gpuInfo.isProbed && gpuInfo.systemMemoryBytes > 0) {
+      return _applyHeadroom(gpuInfo.systemMemoryBytes);
+    }
+
+    // Fallback: hardcoded per-platform estimates.
+    return _hardcodedEstimate();
+  }
+
+  /// Apply platform-specific headroom to real system memory.
+  ///
+  /// Mobile devices need more headroom for the OS and other apps.
+  /// Desktop systems can afford to use a larger fraction.
+  static int _applyHeadroom(int totalBytes) {
+    final double fraction;
+    if (Platform.isIOS || Platform.isAndroid) {
+      fraction = 0.60; // 60% on mobile — leave room for OS + apps
+    } else {
+      fraction = 0.80; // 80% on desktop
+    }
+
+    final usable = (totalBytes * fraction).toInt();
+    _log.info(
+      'System RAM: ${totalBytes ~/ (1024 * 1024)} MB, '
+      'usable for inference: ${usable ~/ (1024 * 1024)} MB '
+      '(${(fraction * 100).toInt()}%)',
+    );
+    return usable;
+  }
+
+  /// Hardcoded estimates when native probing is unavailable.
+  static int _hardcodedEstimate() {
     if (Platform.isIOS) {
       // iOS apps typically get 1.0-1.5 GB on modern devices.
       // Keyboard extensions get ~40 MB.
@@ -24,8 +61,6 @@ class MemoryManager {
     }
 
     if (Platform.isAndroid) {
-      // TODO: Read via platform channel:
-      // ActivityManager.getMemoryInfo() / getLargeMemoryClass()
       return 2 * 1024 * 1024 * 1024; // 2 GB estimate
     }
 

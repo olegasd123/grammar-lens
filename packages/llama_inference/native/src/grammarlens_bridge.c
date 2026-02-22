@@ -8,6 +8,16 @@
 #include <stdlib.h>
 #include <string.h>
 
+// Platform headers for system memory detection
+#ifdef __APPLE__
+  #include <sys/types.h>
+  #include <sys/sysctl.h>
+#elif defined(__linux__) || defined(__ANDROID__)
+  #include <sys/sysinfo.h>
+#elif defined(_WIN32)
+  #include <windows.h>
+#endif
+
 // ── Lifecycle ────────────────────────────────────────────────────────────────
 
 GL_API void gl_backend_init(void) {
@@ -283,6 +293,55 @@ GL_API gl_perf_data gl_context_perf(gl_context_t ctx) {
 
 GL_API void gl_context_perf_reset(gl_context_t ctx) {
     llama_perf_context_reset((struct llama_context*)ctx);
+}
+
+// ── GPU Detection ───────────────────────────────────────────────────────────
+
+static int64_t _gl_get_system_memory(void) {
+#ifdef __APPLE__
+    int64_t mem = 0;
+    size_t  len = sizeof(mem);
+    if (sysctlbyname("hw.memsize", &mem, &len, NULL, 0) == 0) {
+        return mem;
+    }
+    return 0;
+#elif defined(__linux__) || defined(__ANDROID__)
+    struct sysinfo si;
+    if (sysinfo(&si) == 0) {
+        return (int64_t)si.totalram * (int64_t)si.mem_unit;
+    }
+    return 0;
+#elif defined(_WIN32)
+    MEMORYSTATUSEX status;
+    status.dwLength = sizeof(status);
+    if (GlobalMemoryStatusEx(&status)) {
+        return (int64_t)status.ullTotalPhys;
+    }
+    return 0;
+#else
+    return 0;
+#endif
+}
+
+GL_API gl_gpu_info gl_detect_gpu(void) {
+    gl_gpu_info info;
+    memset(&info, 0, sizeof(info));
+
+#ifdef GGML_USE_METAL
+    info.has_metal = true;
+#endif
+
+#ifdef GGML_USE_VULKAN
+    info.has_vulkan = true;
+#endif
+
+#ifdef GGML_USE_CUDA
+    info.has_cuda = true;
+#endif
+
+    info.system_memory_bytes = _gl_get_system_memory();
+
+    return info;
 }
 
 // ── System Info ──────────────────────────────────────────────────────────────

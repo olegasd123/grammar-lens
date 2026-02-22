@@ -147,6 +147,19 @@ typedef struct {
 GL_API gl_perf_data gl_context_perf(gl_context_t ctx);
 GL_API void         gl_context_perf_reset(gl_context_t ctx);
 
+// ── GPU Detection ───────────────────────────────────────────────────────────
+
+/// Reports which GPU backends were compiled into the native library
+/// and the total system memory available on the device.
+typedef struct {
+    bool    has_metal;           // Metal backend compiled in
+    bool    has_vulkan;          // Vulkan backend compiled in
+    bool    has_cuda;            // CUDA backend compiled in
+    int64_t system_memory_bytes; // Total physical RAM (0 if unknown)
+} gl_gpu_info;
+
+GL_API gl_gpu_info gl_detect_gpu(void);
+
 // ── System Info ──────────────────────────────────────────────────────────────
 
 GL_API const char* gl_system_info(void);

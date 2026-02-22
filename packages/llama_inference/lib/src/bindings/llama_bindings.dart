@@ -44,6 +44,23 @@ final class GlPerfData extends Struct {
   external int nEvalTokens;
 }
 
+// ── GPU info struct ─────────────────────────────────────────────────────────
+
+/// Mirrors `gl_gpu_info` from the C bridge.
+final class GlGpuInfo extends Struct {
+  @Bool()
+  external bool hasMetal;
+
+  @Bool()
+  external bool hasVulkan;
+
+  @Bool()
+  external bool hasCuda;
+
+  @Int64()
+  external int systemMemoryBytes;
+}
+
 // ── Native function typedefs ─────────────────────────────────────────────────
 
 // Lifecycle
@@ -141,6 +158,10 @@ typedef _GLContextPerfC = GlPerfData Function(Pointer<Void> ctx);
 typedef _GLContextPerfDart = GlPerfData Function(Pointer<Void> ctx);
 typedef _GLContextPerfResetC = Void Function(Pointer<Void> ctx);
 typedef _GLContextPerfResetDart = void Function(Pointer<Void> ctx);
+
+// GPU detection
+typedef _GLDetectGpuC = GlGpuInfo Function();
+typedef _GLDetectGpuDart = GlGpuInfo Function();
 
 // System info
 typedef _GLSystemInfoC = Pointer<Utf8> Function();
@@ -252,6 +273,11 @@ class LlamaBindings {
   final contextPerfReset = _lib
       .lookupFunction<_GLContextPerfResetC, _GLContextPerfResetDart>(
           'gl_context_perf_reset');
+
+  // ── GPU Detection ──
+
+  final detectGpu = _lib
+      .lookupFunction<_GLDetectGpuC, _GLDetectGpuDart>('gl_detect_gpu');
 
   // ── System Info ──
 
