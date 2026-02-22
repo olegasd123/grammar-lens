@@ -1,0 +1,35 @@
+PODS:
+  - FlutterMacOS (1.0.0)
+  - llama_inference (0.1.0):
+    - FlutterMacOS
+  - platform_integration (0.1.0):
+    - FlutterMacOS
+  - shared_preferences_foundation (0.0.1):
+    - Flutter
+    - FlutterMacOS
+
+DEPENDENCIES:
+  - FlutterMacOS (from `Flutter/ephemeral`)
+  - llama_inference (from `Flutter/ephemeral/.symlinks/plugins/llama_inference/macos`)
+  - platform_integration (from `Flutter/ephemeral/.symlinks/plugins/platform_integration/macos`)
+  - shared_preferences_foundation (from `Flutter/ephemeral/.symlinks/plugins/shared_preferences_foundation/darwin`)
+
+EXTERNAL SOURCES:
+  FlutterMacOS:
+    :path: Flutter/ephemeral
+  llama_inference:
+    :path: Flutter/ephemeral/.symlinks/plugins/llama_inference/macos
+  platform_integration:
+    :path: Flutter/ephemeral/.symlinks/plugins/platform_integration/macos
+  shared_preferences_foundation:
+    :path: Flutter/ephemeral/.symlinks/plugins/shared_preferences_foundation/darwin
+
+SPEC CHECKSUMS:
+  FlutterMacOS: d0db08ddef1a9af05a5ec4b724367152bb0500b1
+  llama_inference: 7ba414595431506337425c3c8507fddcf0065381
+  platform_integration: bec0121935f27230275f797152b4b2c0ffbb249d
+  shared_preferences_foundation: 7036424c3d8ec98dfe75ff1667cb0cd531ec82bb
+
+PODFILE CHECKSUM: 89c84cf5c2351c1e554c6dea18d31a879fc3a19e
+
+COCOAPODS: 1.16.2
