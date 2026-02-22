@@ -25,6 +25,8 @@ flutter:
     platforms:
       android:
         ffiPlugin: true
+        package: com.grammarlens.llama_inference
+        pluginClass: LlamaInferencePlugin
       ios:
         ffiPlugin: true
       macos:

@@ -5,6 +5,7 @@
 /// the UI thread responsive.
 library;
 
+export 'src/android_memory_info.dart';
 export 'src/gpu_backend.dart';
 export 'src/inference_config.dart';
 export 'src/inference_result.dart';
