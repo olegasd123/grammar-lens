@@ -30,8 +30,12 @@ echo "Dart: $(dart --version 2>&1)"
 
 # Check Melos
 if ! command -v melos &> /dev/null; then
-    echo "Installing Melos..."
-    dart pub global activate melos
+    if dart pub global run melos --version &> /dev/null; then
+        echo "Melos is installed globally but not in PATH."
+    else
+        echo "Installing Melos..."
+        dart pub global activate melos
+    fi
     if [ -d "$PUB_CACHE_BIN" ]; then
         export PATH="$PATH:$PUB_CACHE_BIN"
     fi
