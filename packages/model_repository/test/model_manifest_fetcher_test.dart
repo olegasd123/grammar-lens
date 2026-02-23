@@ -19,7 +19,7 @@ void main() {
       {
         'id': 'test-model',
         'displayName': 'Test Model',
-        'language': 'en',
+        'languages': ['en'],
         'quantization': 'Q4_K_M',
         'fileSizeBytes': 2300000000,
         'sha256': 'abc123',

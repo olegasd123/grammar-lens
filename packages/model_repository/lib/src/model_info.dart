@@ -6,8 +6,8 @@ class ModelInfo {
   /// Human-readable name (e.g., "English Grammar (Standard)").
   final String displayName;
 
-  /// ISO 639-1 language code (e.g., "en").
-  final String language;
+  /// ISO 639-1 language codes this model supports (e.g., ["en", "es"]).
+  final List<String> languages;
 
   /// Quantization level (e.g., "Q4_K_M", "Q5_K_M", "Q8_0").
   final String quantization;
@@ -30,7 +30,7 @@ class ModelInfo {
   const ModelInfo({
     required this.id,
     required this.displayName,
-    required this.language,
+    required this.languages,
     required this.quantization,
     required this.fileSizeBytes,
     required this.sha256,
@@ -54,7 +54,9 @@ class ModelInfo {
     return ModelInfo(
       id: json['id'] as String,
       displayName: json['displayName'] as String,
-      language: json['language'] as String,
+      languages: json['languages'] != null
+          ? (json['languages'] as List<dynamic>).cast<String>()
+          : <String>[json['language'] as String],
       quantization: json['quantization'] as String,
       fileSizeBytes: json['fileSizeBytes'] as int,
       sha256: json['sha256'] as String,
@@ -67,7 +69,7 @@ class ModelInfo {
   Map<String, dynamic> toJson() => {
         'id': id,
         'displayName': displayName,
-        'language': language,
+        'languages': languages,
         'quantization': quantization,
         'fileSizeBytes': fileSizeBytes,
         'sha256': sha256,
@@ -78,5 +80,5 @@ class ModelInfo {
 
   @override
   String toString() =>
-      'ModelInfo($id, $language, $quantization, $fileSizeFormatted)';
+      'ModelInfo($id, $languages, $quantization, $fileSizeFormatted)';
 }

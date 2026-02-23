@@ -5,7 +5,7 @@ void main() {
   const testModel = ModelInfo(
     id: 'test-model-en-q4km',
     displayName: 'Test English Model',
-    language: 'en',
+    languages: ['en'],
     quantization: 'Q4_K_M',
     fileSizeBytes: 2300000000,
     sha256: 'abc123def456',
@@ -24,7 +24,7 @@ void main() {
         const mbModel = ModelInfo(
           id: 'small',
           displayName: 'Small',
-          language: 'en',
+          languages: ['en'],
           quantization: 'Q4_K_M',
           fileSizeBytes: 500 * 1024 * 1024, // 500 MB
           sha256: 'x',
@@ -39,7 +39,7 @@ void main() {
         const kbModel = ModelInfo(
           id: 'tiny',
           displayName: 'Tiny',
-          language: 'en',
+          languages: ['en'],
           quantization: 'Q4_K_M',
           fileSizeBytes: 512 * 1024, // 512 KB
           sha256: 'x',
@@ -56,7 +56,7 @@ void main() {
         final json = testModel.toJson();
         expect(json['id'], 'test-model-en-q4km');
         expect(json['displayName'], 'Test English Model');
-        expect(json['language'], 'en');
+        expect(json['languages'], ['en']);
         expect(json['quantization'], 'Q4_K_M');
         expect(json['fileSizeBytes'], 2300000000);
         expect(json['sha256'], 'abc123def456');
@@ -71,7 +71,7 @@ void main() {
 
         expect(restored.id, testModel.id);
         expect(restored.displayName, testModel.displayName);
-        expect(restored.language, testModel.language);
+        expect(restored.languages, testModel.languages);
         expect(restored.quantization, testModel.quantization);
         expect(restored.fileSizeBytes, testModel.fileSizeBytes);
         expect(restored.sha256, testModel.sha256);
@@ -84,7 +84,7 @@ void main() {
         final json = <String, dynamic>{
           'id': 'test',
           'displayName': 'Test',
-          'language': 'en',
+          'languages': ['en'],
           'quantization': 'Q4_K_M',
           'fileSizeBytes': 1000,
           'sha256': 'abc',

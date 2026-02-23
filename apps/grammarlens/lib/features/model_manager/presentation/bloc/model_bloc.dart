@@ -111,7 +111,9 @@ class ModelBloc extends Bloc<ModelEvent, ModelState> {
         contextSize: event.model.contextLength,
       );
 
-      await _registry.setActiveModel(event.model.language, event.model.id);
+      for (final lang in event.model.languages) {
+        await _registry.setActiveModel(lang, event.model.id);
+      }
 
       emit(state.copyWith(
         status: ModelStatus.ready,

@@ -29,10 +29,12 @@ class ModelManagerPage extends StatelessWidget {
             );
           }
 
-          // Group models by language
+          // Group models by language (a model may appear in multiple groups)
           final byLanguage = <String, List<ModelInfo>>{};
           for (final model in state.availableModels) {
-            byLanguage.putIfAbsent(model.language, () => []).add(model);
+            for (final lang in model.languages) {
+              byLanguage.putIfAbsent(lang, () => []).add(model);
+            }
           }
 
           final languages = byLanguage.keys.toList()..sort();

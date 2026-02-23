@@ -5,7 +5,7 @@ void main() {
   const enModel1 = ModelInfo(
     id: 'en-q4km',
     displayName: 'English Standard',
-    language: 'en',
+    languages: ['en'],
     quantization: 'Q4_K_M',
     fileSizeBytes: 2300000000,
     sha256: 'sha-en-q4',
@@ -17,7 +17,7 @@ void main() {
   const enModel2 = ModelInfo(
     id: 'en-q5km',
     displayName: 'English HQ',
-    language: 'en',
+    languages: ['en'],
     quantization: 'Q5_K_M',
     fileSizeBytes: 2800000000,
     sha256: 'sha-en-q5',
@@ -29,7 +29,7 @@ void main() {
   const esModel = ModelInfo(
     id: 'es-q4km',
     displayName: 'Spanish Standard',
-    language: 'es',
+    languages: ['es'],
     quantization: 'Q4_K_M',
     fileSizeBytes: 2300000000,
     sha256: 'sha-es-q4',
@@ -139,7 +139,7 @@ void main() {
       test('covers all supported languages', () {
         final bundled =
             ModelManifest.fromJson(ModelManifest.bundledManifestJson);
-        final languages = bundled.models.map((m) => m.language).toSet();
+        final languages = bundled.models.expand((m) => m.languages).toSet();
         expect(languages, containsAll(['en', 'es', 'fr', 'de', 'pt']));
       });
 

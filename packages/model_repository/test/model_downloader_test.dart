@@ -18,7 +18,7 @@ void main() {
   const testModel = ModelInfo(
     id: 'test-model',
     displayName: 'Test Model',
-    language: 'en',
+    languages: ['en'],
     quantization: 'Q4_K_M',
     fileSizeBytes: 100,
     sha256: 'test-sha',

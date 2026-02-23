@@ -43,7 +43,7 @@ class _NoModelBanner extends StatelessWidget {
   Widget build(BuildContext context) {
     // Find the recommended model (English Q4_K_M)
     final recommended = state.availableModels.where(
-      (m) => m.language == 'en' && m.quantization == 'Q4_K_M',
+      (m) => m.languages.contains('en') && m.quantization == 'Q4_K_M',
     );
 
     // Check if any model is already installed

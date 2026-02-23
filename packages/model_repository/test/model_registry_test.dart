@@ -15,7 +15,7 @@ void main() {
   const testModel = ModelInfo(
     id: 'test-en-q4km',
     displayName: 'Test English',
-    language: 'en',
+    languages: ['en'],
     quantization: 'Q4_K_M',
     fileSizeBytes: 2300000000,
     sha256: 'abc123',
@@ -27,7 +27,7 @@ void main() {
   const testModel2 = ModelInfo(
     id: 'test-es-q4km',
     displayName: 'Test Spanish',
-    language: 'es',
+    languages: ['es'],
     quantization: 'Q4_K_M',
     fileSizeBytes: 2300000000,
     sha256: 'def456',
@@ -73,7 +73,7 @@ void main() {
       const updatedModel = ModelInfo(
         id: 'test-en-q4km',
         displayName: 'Updated English',
-        language: 'en',
+        languages: ['en'],
         quantization: 'Q4_K_M',
         fileSizeBytes: 2300000000,
         sha256: 'abc123',

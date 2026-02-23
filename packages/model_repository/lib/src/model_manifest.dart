@@ -12,9 +12,8 @@ class ModelManifest {
 
   /// Get all models for a specific language.
   List<ModelInfo> getModelsForLanguage(String languageCode) {
-    return models
-        .where((m) => m.language == languageCode.toLowerCase())
-        .toList();
+    final code = languageCode.toLowerCase();
+    return models.where((m) => m.languages.contains(code)).toList();
   }
 
   /// Get a specific model by ID.
@@ -51,7 +50,7 @@ class ModelManifest {
       {
         'id': 'phi-3-mini-4k-instruct-q5_k_m',
         'displayName': 'Grammar phi-3-mini',
-        'language': 'en',
+        'languages': ['en'],
         'quantization': 'Q5_K_M',
         'fileSizeBytes': 2815274944,
         'sha256':
@@ -62,74 +61,102 @@ class ModelManifest {
         'contextLength': 4096,
       },
       {
-        'id': 'phi3-mini-grammar-en-q4km',
-        'displayName': 'English Grammar (Standard)',
-        'language': 'en',
-        'quantization': 'Q4_K_M',
-        'fileSizeBytes': 2300000000,
-        'sha256': 'placeholder',
+        'id': 'aya-23-8B.Q2_K',
+        'displayName': 'Multi-language Grammar (Lower Quality)',
+        'languages': [
+          'ar',
+          'zh',
+          'cs',
+          'nl',
+          'en',
+          'fr',
+          'de',
+          'el',
+          'he',
+          'hi',
+          'id',
+          'it',
+          'ja',
+          'ko',
+          'fa',
+          'pl',
+          'pt',
+          'ro',
+          'ru',
+          'es',
+          'tr',
+          'uk',
+          'vi'
+        ],
+        'quantization': 'Q2_K',
+        'fileSizeBytes': 3438504832,
+        'sha256':
+            'a36462c4c01335288758c91fb5d9530c91a767240f8784094df4920a263fbfc6',
         'downloadUrl':
-            'https://github.com/grammarlens/grammarlens/releases/download/models-v1/phi3-mini-grammar-en-q4km.gguf',
+            'https://huggingface.co/QuantFactory/aya-23-8B-GGUF/blob/main/aya-23-8B.Q2_K.gguf',
         'minAppVersion': '0.1.0',
         'contextLength': 4096,
       },
       {
-        'id': 'phi3-mini-grammar-en-q5km',
-        'displayName': 'English Grammar (High Quality)',
-        'language': 'en',
-        'quantization': 'Q5_K_M',
-        'fileSizeBytes': 2800000000,
-        'sha256': 'placeholder',
+        'id': 'aya-23-8B.Q4_K_M',
+        'displayName': 'Multi-language Grammar (Standard Quality)',
+        'languages': [
+          'ar',
+          'zh',
+          'cs',
+          'nl',
+          'en',
+          'fr',
+          'de',
+          'el',
+          'he',
+          'hi',
+          'id',
+          'it',
+          'ja',
+          'ko',
+          'fa',
+          'pl',
+          'pt',
+          'ro',
+          'ru',
+          'es',
+          'tr',
+          'uk',
+          'vi'
+        ],
+        'quantization': 'Q4_K_M',
+        'fileSizeBytes': 5056981888,
+        'sha256':
+            'e3bdf877d47c45a675e6e689226f376a78d5d055b12c394ce0858a2ebca3c1e0',
         'downloadUrl':
-            'https://github.com/grammarlens/grammarlens/releases/download/models-v1/phi3-mini-grammar-en-q5km.gguf',
+            'https://huggingface.co/QuantFactory/aya-23-8B-GGUF/blob/main/aya-23-8B.Q4_K_M.gguf',
         'minAppVersion': '0.1.0',
         'contextLength': 4096,
       },
       {
-        'id': 'phi3-mini-grammar-es-q4km',
-        'displayName': 'Spanish Grammar (Standard)',
-        'language': 'es',
-        'quantization': 'Q4_K_M',
-        'fileSizeBytes': 2300000000,
-        'sha256': 'placeholder',
+        'id': 'phi-3-mini-4k-grammar-correction.Q2_K',
+        'displayName': 'English Grammar (Lower Quality)',
+        'languages': ['en'],
+        'quantization': 'Q2_K',
+        'fileSizeBytes': 1416202976,
+        'sha256':
+            '2ee82a1ad7f53ae8583aa465b63e4aa245572843ad195e63c037a03832dda5c4',
         'downloadUrl':
-            'https://github.com/grammarlens/grammarlens/releases/download/models-v1/phi3-mini-grammar-es-q4km.gguf',
+            'https://huggingface.co/afrideva/Phi-3-mini-4k-grammar-correction-GGUF/blob/main/phi-3-mini-4k-grammar-correction.Q2_K.gguf',
         'minAppVersion': '0.1.0',
         'contextLength': 4096,
       },
       {
-        'id': 'phi3-mini-grammar-fr-q4km',
-        'displayName': 'French Grammar (Standard)',
-        'language': 'fr',
+        'id': 'phi-3-mini-4k-grammar-correction.Q4_K_M',
+        'displayName': 'English Grammar (Standard Quality)',
+        'languages': ['en'],
         'quantization': 'Q4_K_M',
-        'fileSizeBytes': 2300000000,
-        'sha256': 'placeholder',
+        'fileSizeBytes': 2393231072,
+        'sha256':
+            'da14a00718821f0510cb63c3c184dde97f05d4063abce0ad9e2c86bdfae93bf3',
         'downloadUrl':
-            'https://github.com/grammarlens/grammarlens/releases/download/models-v1/phi3-mini-grammar-fr-q4km.gguf',
-        'minAppVersion': '0.1.0',
-        'contextLength': 4096,
-      },
-      {
-        'id': 'phi3-mini-grammar-de-q4km',
-        'displayName': 'German Grammar (Standard)',
-        'language': 'de',
-        'quantization': 'Q4_K_M',
-        'fileSizeBytes': 2300000000,
-        'sha256': 'placeholder',
-        'downloadUrl':
-            'https://github.com/grammarlens/grammarlens/releases/download/models-v1/phi3-mini-grammar-de-q4km.gguf',
-        'minAppVersion': '0.1.0',
-        'contextLength': 4096,
-      },
-      {
-        'id': 'phi3-mini-grammar-pt-q4km',
-        'displayName': 'Portuguese Grammar (Standard)',
-        'language': 'pt',
-        'quantization': 'Q4_K_M',
-        'fileSizeBytes': 2300000000,
-        'sha256': 'placeholder',
-        'downloadUrl':
-            'https://github.com/grammarlens/grammarlens/releases/download/models-v1/phi3-mini-grammar-pt-q4km.gguf',
+            'https://huggingface.co/afrideva/Phi-3-mini-4k-grammar-correction-GGUF/blob/main/phi-3-mini-4k-grammar-correction.Q4_K_M.gguf',
         'minAppVersion': '0.1.0',
         'contextLength': 4096,
       },

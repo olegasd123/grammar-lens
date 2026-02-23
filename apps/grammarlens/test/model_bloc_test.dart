@@ -27,7 +27,7 @@ void main() {
   const testModel = ModelInfo(
     id: 'test-en-q4km',
     displayName: 'Test English',
-    language: 'en',
+    languages: ['en'],
     quantization: 'Q4_K_M',
     fileSizeBytes: 2300000000,
     sha256: 'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855',
@@ -269,9 +269,11 @@ void main() {
           });
           when(() => mockRegistry.registerModel(testModel))
               .thenAnswer((_) async {});
-          when(
-            () => mockRegistry.setActiveModel(testModel.language, testModel.id),
-          ).thenAnswer((_) async {});
+          for (final lang in testModel.languages) {
+            when(
+              () => mockRegistry.setActiveModel(lang, testModel.id),
+            ).thenAnswer((_) async {});
+          }
         },
         build: buildBloc,
         act: (bloc) => bloc.add(const ModelDownloadRequested(model: testModel)),
