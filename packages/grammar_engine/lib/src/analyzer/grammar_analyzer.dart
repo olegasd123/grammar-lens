@@ -103,7 +103,7 @@ class GrammarAnalyzer {
 
     // Step 3: Process in batches
     final allCorrections = <Correction>[];
-    final rawOutputs = <String>[];
+    final debugBatches = <String>[];
 
     for (var i = 0; i < sentences.length; i += sentencesPerBatch) {
       final end = (i + sentencesPerBatch).clamp(0, sentences.length);
@@ -118,7 +118,13 @@ class GrammarAnalyzer {
 
       // Run inference
       final rawOutput = await onInfer(prompt);
-      rawOutputs.add(rawOutput);
+      debugBatches.add(
+        _buildDebugBatchTrace(
+          batchIndex: (i ~/ sentencesPerBatch) + 1,
+          prompt: prompt,
+          response: rawOutput,
+        ),
+      );
 
       // Parse corrections
       final corrections = CorrectionParser.parse(
@@ -147,7 +153,7 @@ class GrammarAnalyzer {
       language: detectedLanguage,
       statistics: statistics,
       analysisTimeMs: stopwatch.elapsedMilliseconds,
-      rawModelOutput: rawOutputs.join('\n\n----- BATCH -----\n\n'),
+      rawModelOutput: debugBatches.join('\n\n----- BATCH -----\n\n'),
     );
   }
 
@@ -208,5 +214,17 @@ class GrammarAnalyzer {
 
     final sourceText = sentences.map((s) => s.text).join('\n').toLowerCase();
     return sourceText.contains(originalLower);
+  }
+
+  String _buildDebugBatchTrace({
+    required int batchIndex,
+    required String prompt,
+    required String response,
+  }) {
+    return 'Batch $batchIndex\n'
+        '=== REQUEST (prompt sent to model) ===\n'
+        '$prompt\n'
+        '=== RESPONSE (model output) ===\n'
+        '$response';
   }
 }
