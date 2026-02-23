@@ -17,8 +17,7 @@ final _log = Logger('ExternalCheckBloc');
 /// 4. Run grammar analysis
 /// 5. Present corrections for review
 /// 6. Write corrected text back to the external app
-class ExternalCheckBloc
-    extends Bloc<ExternalCheckEvent, ExternalCheckState> {
+class ExternalCheckBloc extends Bloc<ExternalCheckEvent, ExternalCheckState> {
   final AccessibilityService _accessibilityService;
   final GrammarAnalyzer? _analyzer;
 
@@ -141,18 +140,31 @@ class ExternalCheckBloc
 
     // Apply this correction to the corrected text
     var text = state.correctedText ?? state.originalText ?? '';
+    final range = _resolveCorrectionRange(text, event.correction);
+    if (range == null) {
+      _log.warning(
+        'Skipping invalid external correction range '
+        'start=${event.correction.startOffset}, '
+        'end=${event.correction.endOffset}, '
+        'original="${event.correction.originalText}"',
+      );
+      corrections.removeAt(index);
+      emit(state.copyWith(corrections: corrections));
+      return;
+    }
+
     text = text.replaceRange(
-      event.correction.startOffset,
-      event.correction.endOffset,
+      range.start,
+      range.end,
       event.correction.correctedText,
     );
 
     // Adjust offsets of subsequent corrections
-    final lengthDiff = event.correction.correctedText.length -
-        event.correction.originalText.length;
+    final replacedLength = range.end - range.start;
+    final lengthDiff = event.correction.correctedText.length - replacedLength;
 
     final adjusted = corrections.map((c) {
-      if (c.startOffset > event.correction.startOffset && !c.isAccepted) {
+      if (c.startOffset > range.start && !c.isAccepted) {
         return c.copyWith(
           startOffset: c.startOffset + lengthDiff,
           endOffset: c.endOffset + lengthDiff,
@@ -199,16 +211,25 @@ class ExternalCheckBloc
       ..sort((a, b) => b.startOffset.compareTo(a.startOffset));
 
     for (final correction in remaining) {
+      final range = _resolveCorrectionRange(text, correction);
+      if (range == null) {
+        _log.warning(
+          'Skipping invalid external correction in apply-all '
+          'start=${correction.startOffset}, '
+          'end=${correction.endOffset}, '
+          'original="${correction.originalText}"',
+        );
+        continue;
+      }
       text = text.replaceRange(
-        correction.startOffset,
-        correction.endOffset,
+        range.start,
+        range.end,
         correction.correctedText,
       );
     }
 
     try {
-      final success =
-          await _accessibilityService.writeFocusedElement(text);
+      final success = await _accessibilityService.writeFocusedElement(text);
 
       if (success) {
         _log.info('Wrote corrected text back to source app');
@@ -243,4 +264,57 @@ class ExternalCheckBloc
   ) {
     emit(const ExternalCheckState());
   }
+
+  _ResolvedRange? _resolveCorrectionRange(String text, Correction correction) {
+    var start = correction.startOffset;
+    var end = correction.endOffset;
+
+    if (start < 0 || start > text.length || end < start || end > text.length) {
+      final fallback = _findTextRange(text, correction.originalText);
+      if (fallback == null) return null;
+      start = fallback.start;
+      end = fallback.end;
+    } else {
+      final span = text.substring(start, end);
+      if (span != correction.originalText) {
+        final fallback = _findTextRange(text, correction.originalText);
+        if (fallback == null) return null;
+        start = fallback.start;
+        end = fallback.end;
+      }
+    }
+
+    return _ResolvedRange(start: start, end: end);
+  }
+
+  _ResolvedRange? _findTextRange(String text, String original) {
+    if (original.isEmpty) return null;
+
+    final exact = text.indexOf(original);
+    if (exact >= 0) {
+      return _ResolvedRange(start: exact, end: exact + original.length);
+    }
+
+    final lowerText = text.toLowerCase();
+    final lowerOriginal = original.toLowerCase();
+    final insensitive = lowerText.indexOf(lowerOriginal);
+    if (insensitive >= 0) {
+      return _ResolvedRange(
+        start: insensitive,
+        end: insensitive + original.length,
+      );
+    }
+
+    return null;
+  }
+}
+
+class _ResolvedRange {
+  final int start;
+  final int end;
+
+  const _ResolvedRange({
+    required this.start,
+    required this.end,
+  });
 }

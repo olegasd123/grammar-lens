@@ -62,20 +62,14 @@ class _EditorPageState extends State<EditorPage> {
   void _onModelReady(ModelBloc modelBloc) {
     final engine = modelBloc.engine;
     if (engine == null) return;
-    final activeModel = modelBloc.state.activeModel;
 
     final currentText = _editorBloc?.state.text ?? '';
     final currentLanguage = _editorBloc?.state.selectedLanguage;
 
     _editorBloc?.close();
 
-    final promptFormat = activeModel != null &&
-            activeModel.id.toLowerCase().startsWith('aya-23-8b')
-        ? PromptFormat.plainInstruction
-        : PromptFormat.phi3Chat;
-
     final analyzer = GrammarAnalyzer(
-      promptFormat: promptFormat,
+      promptFormat: PromptFormat.phi3Chat,
       onInfer: (prompt) async {
         final result = await engine.complete(prompt);
         return result.text;

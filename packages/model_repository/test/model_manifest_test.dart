@@ -146,48 +146,18 @@ void main() {
           ids,
           containsAll([
             'phi-3-mini-4k-instruct-q5_k_m',
-            'aya-23-8B.Q2_K',
-            'aya-23-8B.Q4_K_M',
             'phi-3-mini-4k-grammar-correction.Q2_K',
             'phi-3-mini-4k-grammar-correction.Q4_K_M',
           ]),
         );
-        expect(ids, hasLength(5));
+        expect(ids, hasLength(3));
       });
 
-      test('covers all supported languages', () {
+      test('bundled models currently target English', () {
         final bundled =
             ModelManifest.fromJson(ModelManifest.bundledManifestJson);
         final languages = bundled.models.expand((m) => m.languages).toSet();
-        expect(
-          languages,
-          containsAll([
-            'ar',
-            'zh',
-            'zh-hant',
-            'cs',
-            'nl',
-            'en',
-            'fr',
-            'de',
-            'el',
-            'he',
-            'hi',
-            'id',
-            'it',
-            'ja',
-            'ko',
-            'fa',
-            'pl',
-            'pt',
-            'ro',
-            'ru',
-            'es',
-            'tr',
-            'uk',
-            'vi',
-          ]),
-        );
+        expect(languages, {'en'});
       });
 
       test('English includes Q2_K, Q4_K_M, and Q5_K_M quantization levels', () {

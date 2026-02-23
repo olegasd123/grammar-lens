@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:logging/logging.dart';
 
 import 'package:grammar_engine/grammar_engine.dart';
 
@@ -12,6 +13,8 @@ import 'package:grammarlens/features/editor/presentation/bloc/editor_state.dart'
 /// Manages the text analysis pipeline: debouncing user input,
 /// running grammar analysis, and merging correction results.
 class EditorBloc extends Bloc<EditorEvent, EditorState> {
+  static final _log = Logger('EditorBloc');
+
   final GrammarAnalyzer? _analyzer;
   final LanguageDetector _languageDetector;
   final TextStatisticsCalculator _statisticsCalculator;
@@ -135,22 +138,35 @@ class EditorBloc extends Bloc<EditorEvent, EditorState> {
     );
 
     if (index >= 0) {
+      final text = state.text;
+      final range = _resolveCorrectionRange(text, event.correction);
+      if (range == null) {
+        _log.warning(
+          'Skipping invalid correction range '
+          'start=${event.correction.startOffset}, '
+          'end=${event.correction.endOffset}, '
+          'original="${event.correction.originalText}"',
+        );
+        corrections.removeAt(index);
+        emit(state.copyWith(corrections: corrections));
+        return;
+      }
+
       corrections[index] = corrections[index].copyWith(isAccepted: true);
 
       // Apply the correction to the text
-      final text = state.text;
       final newText = text.replaceRange(
-        event.correction.startOffset,
-        event.correction.endOffset,
+        range.start,
+        range.end,
         event.correction.correctedText,
       );
 
       // Adjust offsets of subsequent corrections
-      final lengthDiff = event.correction.correctedText.length -
-          event.correction.originalText.length;
+      final replacedLength = range.end - range.start;
+      final lengthDiff = event.correction.correctedText.length - replacedLength;
 
       final adjustedCorrections = corrections.map((c) {
-        if (c.startOffset > event.correction.startOffset && !c.isAccepted) {
+        if (c.startOffset > range.start && !c.isAccepted) {
           return c.copyWith(
             startOffset: c.startOffset + lengthDiff,
             endOffset: c.endOffset + lengthDiff,
@@ -191,9 +207,19 @@ class EditorBloc extends Bloc<EditorEvent, EditorState> {
 
     for (final correction in sorted) {
       if (!correction.isAccepted && !correction.isDismissed) {
+        final range = _resolveCorrectionRange(text, correction);
+        if (range == null) {
+          _log.warning(
+            'Skipping invalid correction in Fix all '
+            'start=${correction.startOffset}, '
+            'end=${correction.endOffset}, '
+            'original="${correction.originalText}"',
+          );
+          continue;
+        }
         text = text.replaceRange(
-          correction.startOffset,
-          correction.endOffset,
+          range.start,
+          range.end,
           correction.correctedText,
         );
       }
@@ -211,4 +237,57 @@ class EditorBloc extends Bloc<EditorEvent, EditorState> {
     _debounceTimer?.cancel();
     return super.close();
   }
+
+  _ResolvedRange? _resolveCorrectionRange(String text, Correction correction) {
+    var start = correction.startOffset;
+    var end = correction.endOffset;
+
+    if (start < 0 || start > text.length || end < start || end > text.length) {
+      final fallback = _findTextRange(text, correction.originalText);
+      if (fallback == null) return null;
+      start = fallback.start;
+      end = fallback.end;
+    } else {
+      final span = text.substring(start, end);
+      if (span != correction.originalText) {
+        final fallback = _findTextRange(text, correction.originalText);
+        if (fallback == null) return null;
+        start = fallback.start;
+        end = fallback.end;
+      }
+    }
+
+    return _ResolvedRange(start: start, end: end);
+  }
+
+  _ResolvedRange? _findTextRange(String text, String original) {
+    if (original.isEmpty) return null;
+
+    final exact = text.indexOf(original);
+    if (exact >= 0) {
+      return _ResolvedRange(start: exact, end: exact + original.length);
+    }
+
+    final lowerText = text.toLowerCase();
+    final lowerOriginal = original.toLowerCase();
+    final insensitive = lowerText.indexOf(lowerOriginal);
+    if (insensitive >= 0) {
+      return _ResolvedRange(
+        start: insensitive,
+        end: insensitive + original.length,
+      );
+    }
+
+    return null;
+  }
+}
+
+class _ResolvedRange {
+  final int start;
+  final int end;
+
+  const _ResolvedRange({
+    required this.start,
+    required this.end,
+  });
 }

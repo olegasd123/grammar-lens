@@ -352,11 +352,89 @@ void main() {
             bloc.add(ExternalCorrectionAccepted(correction: correction)),
         verify: (bloc) {
           // "Helo" → "Hello" adds 1 char, so second correction shifts +1
-          final secondCorrection = bloc.state.corrections
-              .where((c) => !c.isAccepted)
-              .first;
+          final secondCorrection =
+              bloc.state.corrections.where((c) => !c.isAccepted).first;
           expect(secondCorrection.startOffset, 6);
           expect(secondCorrection.endOffset, 11);
+        },
+      );
+
+      blocTest<ExternalCheckBloc, ExternalCheckState>(
+        'falls back to text search when correction offsets are stale',
+        build: () => ExternalCheckBloc(
+          accessibilityService: mockAccessibility,
+          analyzer: mockAnalyzer,
+        ),
+        seed: () => ExternalCheckState(
+          status: ExternalCheckStatus.ready,
+          sourceAppName: 'TextEdit',
+          originalText: 'Helo world',
+          correctedText: 'Helo world',
+          corrections: [
+            Correction(
+              startOffset: 999,
+              endOffset: 1003,
+              originalText: 'Helo',
+              correctedText: 'Hello',
+              type: CorrectionType.spelling,
+              explanation: 'Misspelled',
+            ),
+          ],
+        ),
+        act: (bloc) => bloc.add(
+          ExternalCorrectionAccepted(
+            correction: Correction(
+              startOffset: 999,
+              endOffset: 1003,
+              originalText: 'Helo',
+              correctedText: 'Hello',
+              type: CorrectionType.spelling,
+              explanation: 'Misspelled',
+            ),
+          ),
+        ),
+        verify: (bloc) {
+          expect(bloc.state.correctedText, 'Hello world');
+        },
+      );
+
+      blocTest<ExternalCheckBloc, ExternalCheckState>(
+        'skips invalid correction when range and text lookup are both invalid',
+        build: () => ExternalCheckBloc(
+          accessibilityService: mockAccessibility,
+          analyzer: mockAnalyzer,
+        ),
+        seed: () => ExternalCheckState(
+          status: ExternalCheckStatus.ready,
+          sourceAppName: 'TextEdit',
+          originalText: 'Helo world',
+          correctedText: 'Helo world',
+          corrections: [
+            Correction(
+              startOffset: 999,
+              endOffset: 1003,
+              originalText: 'missing-fragment',
+              correctedText: 'fixed',
+              type: CorrectionType.spelling,
+              explanation: 'Misspelled',
+            ),
+          ],
+        ),
+        act: (bloc) => bloc.add(
+          ExternalCorrectionAccepted(
+            correction: Correction(
+              startOffset: 999,
+              endOffset: 1003,
+              originalText: 'missing-fragment',
+              correctedText: 'fixed',
+              type: CorrectionType.spelling,
+              explanation: 'Misspelled',
+            ),
+          ),
+        ),
+        verify: (bloc) {
+          expect(bloc.state.correctedText, 'Helo world');
+          expect(bloc.state.corrections, isEmpty);
         },
       );
     });
@@ -548,6 +626,49 @@ void main() {
                 contains('Channel error'),
               ),
         ],
+      );
+
+      blocTest<ExternalCheckBloc, ExternalCheckState>(
+        'skips invalid ranges and still applies valid corrections before write-back',
+        setUp: () {
+          when(() => mockAccessibility.writeFocusedElement(any()))
+              .thenAnswer((_) async => true);
+        },
+        build: () => ExternalCheckBloc(
+          accessibilityService: mockAccessibility,
+          analyzer: mockAnalyzer,
+        ),
+        seed: () => ExternalCheckState(
+          status: ExternalCheckStatus.ready,
+          sourceAppName: 'Notes',
+          originalText: 'Helo wrold',
+          correctedText: 'Helo wrold',
+          corrections: [
+            Correction(
+              startOffset: 999,
+              endOffset: 1003,
+              originalText: 'missing',
+              correctedText: 'fixed',
+              type: CorrectionType.spelling,
+              explanation: 'Misspelled',
+            ),
+            Correction(
+              startOffset: 5,
+              endOffset: 10,
+              originalText: 'wrold',
+              correctedText: 'world',
+              type: CorrectionType.spelling,
+              explanation: 'Misspelled',
+            ),
+          ],
+        ),
+        act: (bloc) => bloc.add(const ExternalCorrectionsDone()),
+        verify: (_) {
+          final captured =
+              verify(() => mockAccessibility.writeFocusedElement(captureAny()))
+                  .captured;
+          expect(captured.last, 'Helo world');
+        },
       );
     });
 

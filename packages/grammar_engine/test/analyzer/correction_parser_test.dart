@@ -17,7 +17,10 @@ void main() {
 
       final sentences = [
         const SentenceSpan(
-            text: 'He dont like it.', startOffset: 0, endOffset: 16),
+          text: 'He dont like it.',
+          startOffset: 0,
+          endOffset: 16,
+        ),
       ];
 
       final corrections = CorrectionParser.parse(xml, sentences);
@@ -49,7 +52,10 @@ void main() {
 
       final sentences = [
         const SentenceSpan(
-            text: 'He dont like teh cake.', startOffset: 0, endOffset: 22),
+          text: 'He dont like teh cake.',
+          startOffset: 0,
+          endOffset: 22,
+        ),
       ];
 
       final corrections = CorrectionParser.parse(xml, sentences);
@@ -62,7 +68,10 @@ void main() {
       const xml = '<corrections></corrections>';
       final sentences = [
         const SentenceSpan(
-            text: 'Correct sentence.', startOffset: 0, endOffset: 17),
+          text: 'Correct sentence.',
+          startOffset: 0,
+          endOffset: 17,
+        ),
       ];
 
       final corrections = CorrectionParser.parse(xml, sentences);
@@ -94,7 +103,10 @@ void main() {
 
       final sentences = [
         const SentenceSpan(
-            text: 'He dont like it.', startOffset: 0, endOffset: 16),
+          text: 'He dont like it.',
+          startOffset: 0,
+          endOffset: 16,
+        ),
       ];
 
       final corrections = CorrectionParser.parse(xml, sentences);
@@ -133,6 +145,62 @@ Solution 2:
       expect(corrections.first.originalText, 'здровствуй друг');
       expect(corrections.first.correctedText, 'здравствуй, друг');
       expect(corrections.first.type, CorrectionType.spelling);
+    });
+
+    test('selects non-empty block when first block is empty example', () {
+      const xml = '''
+<corrections></corrections>
+
+<corrections>
+<item>
+  <original>Hola amiga camo estas</original>
+  <corrected>Hola amiga, ¿cómo estás?</corrected>
+  <type>grammar</type>
+  <explanation>Error en "camo".</explanation>
+  <offset>0</offset>
+</item>
+</corrections>
+''';
+
+      final sentences = [
+        const SentenceSpan(
+          text: 'Hola amiga camo estas',
+          startOffset: 0,
+          endOffset: 20,
+        ),
+      ];
+
+      final corrections = CorrectionParser.parse(xml, sentences);
+      expect(corrections, hasLength(1));
+      expect(corrections.first.originalText, 'Hola amiga camo estas');
+      expect(corrections.first.correctedText, 'Hola amiga, ¿cómo estás?');
+    });
+
+    test('keeps empty block when other blocks do not match source text', () {
+      const xml = '''
+<corrections></corrections>
+
+<corrections>
+<item>
+  <original>Completely different text</original>
+  <corrected>Corrected text</corrected>
+  <type>grammar</type>
+  <explanation>Not related.</explanation>
+  <offset>0</offset>
+</item>
+</corrections>
+''';
+
+      final sentences = [
+        const SentenceSpan(
+          text: 'Hola amiga camo estas',
+          startOffset: 0,
+          endOffset: 20,
+        ),
+      ];
+
+      final corrections = CorrectionParser.parse(xml, sentences);
+      expect(corrections, isEmpty);
     });
   });
 }

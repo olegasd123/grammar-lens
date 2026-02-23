@@ -20,14 +20,25 @@ class CorrectionParser {
     List<SentenceSpan> sentences, {
     int baseOffset = 0,
   }) {
-    final primaryBlock = _extractPrimaryCorrectionsBlock(xml) ?? xml;
+    final blocks = _extractCorrectionsBlocks(xml);
+    final sourceText = sentences.map((s) => s.text).join('\n').toLowerCase();
+    final primaryBlock = _selectBestCorrectionsBlock(blocks, sourceText) ?? xml;
+
+    return _parseItems(primaryBlock, sentences, baseOffset);
+  }
+
+  static List<Correction> _parseItems(
+    String xml,
+    List<SentenceSpan> sentences,
+    int baseOffset,
+  ) {
     final corrections = <Correction>[];
     final itemPattern = RegExp(
       '<item>(.*?)</item>',
       dotAll: true,
     );
 
-    for (final match in itemPattern.allMatches(primaryBlock)) {
+    for (final match in itemPattern.allMatches(xml)) {
       final itemXml = match.group(1);
       if (itemXml == null) continue;
 
@@ -40,12 +51,58 @@ class CorrectionParser {
     return corrections;
   }
 
-  static String? _extractPrimaryCorrectionsBlock(String xml) {
+  static List<String> _extractCorrectionsBlocks(String xml) {
     final blockPattern = RegExp(
       '<corrections>[\\s\\S]*?</corrections>',
       caseSensitive: false,
     );
-    return blockPattern.firstMatch(xml)?.group(0);
+    return blockPattern
+        .allMatches(xml)
+        .map((m) => m.group(0))
+        .whereType<String>()
+        .toList();
+  }
+
+  static String? _selectBestCorrectionsBlock(
+    List<String> blocks,
+    String sourceText,
+  ) {
+    if (blocks.isEmpty) return null;
+
+    String? bestMatching;
+    var bestMatchingScore = -1;
+
+    for (final block in blocks) {
+      final itemCount =
+          RegExp('<item>(.*?)</item>', dotAll: true).allMatches(block).length;
+      final validOriginalCount = RegExp(
+        '<original>(.*?)</original>',
+        dotAll: true,
+      )
+          .allMatches(block)
+          .map((m) => m.group(1)?.trim().toLowerCase() ?? '')
+          .where(
+            (original) => original.isNotEmpty && sourceText.contains(original),
+          )
+          .length;
+
+      // Prefer blocks that reference the actual source text.
+      // Then prefer blocks with more items.
+      // On ties, keep earlier block.
+      final score = (validOriginalCount * 1000) + itemCount;
+      if (validOriginalCount > 0 && score > bestMatchingScore) {
+        bestMatchingScore = score;
+        bestMatching = block;
+      }
+    }
+
+    if (bestMatching != null) {
+      return bestMatching;
+    }
+
+    // No block matches the source text; keep the first one to avoid
+    // selecting unrelated examples from model chatter.
+    return blocks.first;
   }
 
   /// Parse a single `<item>` block into a [Correction].

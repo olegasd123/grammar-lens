@@ -124,14 +124,14 @@ class LanguageDetector {
   }
 
   static final _cyrillicPattern = RegExp(r'[\u0400-\u04FF]');
-  static final _ukrainianHintPattern = RegExp(r'[іїєґІЇЄҐ]');
+  static final _ukrainianHintPattern = RegExp('[іїєґІЇЄҐ]');
   static final _arabicScriptPattern = RegExp(r'[\u0600-\u06FF]');
-  static final _persianHintPattern = RegExp(r'[پچژگککی]');
+  static final _persianHintPattern = RegExp('[پچژگککی]');
   static final _hebrewPattern = RegExp(r'[\u0590-\u05FF]');
   static final _greekPattern = RegExp(r'[\u0370-\u03FF]');
   static final _devanagariPattern = RegExp(r'[\u0900-\u097F]');
   static final _hanPattern = RegExp(r'[\u4E00-\u9FFF]');
-  static final _traditionalHanHintPattern = RegExp(r'[體國龍廣學書會話門風語]');
+  static final _traditionalHanHintPattern = RegExp('[體國龍廣學書會話門風語]');
   static final _hiraganaKatakanaPattern = RegExp(r'[\u3040-\u30FF]');
   static final _hangulPattern = RegExp(r'[\uAC00-\uD7AF]');
 

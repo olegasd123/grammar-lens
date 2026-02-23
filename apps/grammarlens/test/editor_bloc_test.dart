@@ -226,6 +226,73 @@ void main() {
           expect(secondCorrection.endOffset, 11);
         },
       );
+
+      blocTest<EditorBloc, EditorState>(
+        'falls back to text search when correction offsets are stale',
+        build: EditorBloc.new,
+        seed: () => EditorState(
+          text: 'Helo world',
+          corrections: [
+            Correction(
+              startOffset: 999,
+              endOffset: 1003,
+              originalText: 'Helo',
+              correctedText: 'Hello',
+              type: CorrectionType.spelling,
+              explanation: 'Misspelled',
+            ),
+          ],
+        ),
+        act: (bloc) => bloc.add(
+          CorrectionAccepted(
+            correction: Correction(
+              startOffset: 999,
+              endOffset: 1003,
+              originalText: 'Helo',
+              correctedText: 'Hello',
+              type: CorrectionType.spelling,
+              explanation: 'Misspelled',
+            ),
+          ),
+        ),
+        verify: (bloc) {
+          expect(bloc.state.text, 'Hello world');
+        },
+      );
+
+      blocTest<EditorBloc, EditorState>(
+        'skips invalid correction when range and text lookup are both invalid',
+        build: EditorBloc.new,
+        seed: () => EditorState(
+          text: 'Helo world',
+          corrections: [
+            Correction(
+              startOffset: 999,
+              endOffset: 1003,
+              originalText: 'missing-fragment',
+              correctedText: 'fixed',
+              type: CorrectionType.spelling,
+              explanation: 'Misspelled',
+            ),
+          ],
+        ),
+        act: (bloc) => bloc.add(
+          CorrectionAccepted(
+            correction: Correction(
+              startOffset: 999,
+              endOffset: 1003,
+              originalText: 'missing-fragment',
+              correctedText: 'fixed',
+              type: CorrectionType.spelling,
+              explanation: 'Misspelled',
+            ),
+          ),
+        ),
+        verify: (bloc) {
+          expect(bloc.state.text, 'Helo world');
+          expect(bloc.state.corrections, isEmpty);
+        },
+      );
     });
 
     group('CorrectionDismissed', () {
@@ -293,6 +360,38 @@ void main() {
         act: (bloc) => bloc.add(const AcceptAllCorrections()),
         verify: (bloc) {
           expect(bloc.state.text, 'Hello world');
+          expect(bloc.state.corrections, isEmpty);
+          expect(bloc.state.status, AnalysisStatus.idle);
+        },
+      );
+
+      blocTest<EditorBloc, EditorState>(
+        'skips invalid ranges and still applies valid corrections',
+        build: EditorBloc.new,
+        seed: () => EditorState(
+          text: 'Helo wrold',
+          corrections: [
+            Correction(
+              startOffset: 999,
+              endOffset: 1003,
+              originalText: 'missing',
+              correctedText: 'fixed',
+              type: CorrectionType.spelling,
+              explanation: 'Misspelled',
+            ),
+            Correction(
+              startOffset: 5,
+              endOffset: 10,
+              originalText: 'wrold',
+              correctedText: 'world',
+              type: CorrectionType.spelling,
+              explanation: 'Misspelled',
+            ),
+          ],
+        ),
+        act: (bloc) => bloc.add(const AcceptAllCorrections()),
+        verify: (bloc) {
+          expect(bloc.state.text, 'Helo world');
           expect(bloc.state.corrections, isEmpty);
           expect(bloc.state.status, AnalysisStatus.idle);
         },
