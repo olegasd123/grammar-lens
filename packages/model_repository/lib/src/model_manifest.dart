@@ -101,7 +101,7 @@ class ModelManifest {
         'downloadUrl':
             'https://huggingface.co/mradermacher/Mistral-7B-UA-Grammar-GRPO-GGUF/resolve/main/Mistral-7B-UA-Grammar-GRPO.Q2_K.gguf',
         'minAppVersion': '0.1.0',
-        'contextLength': 4096,
+        'contextLength': 32768,
       },
       {
         'id': 'Mistral-7B-UA-Grammar-GRPO.Q4_K_M',
@@ -114,7 +114,7 @@ class ModelManifest {
         'downloadUrl':
             'https://huggingface.co/mradermacher/Mistral-7B-UA-Grammar-GRPO-GGUF/resolve/main/Mistral-7B-UA-Grammar-GRPO.Q4_K_M.gguf',
         'minAppVersion': '0.1.0',
-        'contextLength': 4096,
+        'contextLength': 32768,
       },
     ],
   };

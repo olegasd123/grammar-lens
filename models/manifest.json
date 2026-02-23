@@ -32,7 +32,7 @@
       "sha256": "06ee25c8e4dcb5387abcf2d2f032aa8a0ee04f6462a14eaa7959e36650843b6f",
       "downloadUrl": "https://huggingface.co/mradermacher/Mistral-7B-UA-Grammar-GRPO-GGUF/resolve/main/Mistral-7B-UA-Grammar-GRPO.Q2_K.gguf",
       "minAppVersion": "0.1.0",
-      "contextLength": 4096
+      "contextLength": 32768
     },
     {
       "id": "Mistral-7B-UA-Grammar-GRPO.Q4_K_M",
@@ -43,7 +43,7 @@
       "sha256": "23e86b08d3ae26e6aa270891bb1ba4000c98320cac4c8cc0a6ad47959a4d59bf",
       "downloadUrl": "https://huggingface.co/mradermacher/Mistral-7B-UA-Grammar-GRPO-GGUF/resolve/main/Mistral-7B-UA-Grammar-GRPO.Q4_K_M.gguf",
       "minAppVersion": "0.1.0",
-      "contextLength": 4096
+      "contextLength": 32768
     }
   ]
 }
