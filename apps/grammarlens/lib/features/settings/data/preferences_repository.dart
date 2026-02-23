@@ -9,6 +9,7 @@ abstract final class _Keys {
   static const defaultLanguage = 'pref_default_language';
   static const autoCheck = 'pref_auto_check';
   static const editorFontScale = 'pref_editor_font_scale';
+  static const aiTemperature = 'pref_ai_temperature';
   static const showDebugMenu = 'pref_show_debug_menu';
 }
 
@@ -31,12 +32,16 @@ class PreferencesRepository {
         themeModeIndex != null && themeModeIndex < ThemeMode.values.length
             ? ThemeMode.values[themeModeIndex]
             : ThemeMode.system;
+    final aiTemperature = _normalizeTemperature(
+      prefs.getDouble(_Keys.aiTemperature),
+    );
 
     return AppPreferences(
       themeMode: themeMode,
       defaultLanguage: prefs.getString(_Keys.defaultLanguage) ?? 'auto',
       autoCheck: prefs.getBool(_Keys.autoCheck) ?? true,
       editorFontScale: prefs.getDouble(_Keys.editorFontScale) ?? 1.0,
+      aiTemperature: aiTemperature,
       showDebugMenu: prefs.getBool(_Keys.showDebugMenu) ?? true,
     );
   }
@@ -65,9 +70,25 @@ class PreferencesRepository {
     await prefs.setDouble(_Keys.editorFontScale, scale);
   }
 
+  /// Persist the AI temperature.
+  Future<void> saveAiTemperature(double temperature) async {
+    final prefs = await _ensurePrefs();
+    await prefs.setDouble(
+      _Keys.aiTemperature,
+      _normalizeTemperature(temperature),
+    );
+  }
+
   /// Persist visibility of the debug menu item.
   Future<void> saveShowDebugMenu({required bool enabled}) async {
     final prefs = await _ensurePrefs();
     await prefs.setBool(_Keys.showDebugMenu, enabled);
+  }
+
+  double _normalizeTemperature(double? value) {
+    if (value == null || value.isNaN || !value.isFinite) {
+      return 0.1;
+    }
+    return value.clamp(0.0, 1.0).toDouble();
   }
 }

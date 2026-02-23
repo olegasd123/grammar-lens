@@ -34,6 +34,12 @@ class EditorFontScaleChanged extends SettingsEvent {
   const EditorFontScaleChanged({required this.scale});
 }
 
+/// Change AI temperature.
+class AiTemperatureChanged extends SettingsEvent {
+  final double temperature;
+  const AiTemperatureChanged({required this.temperature});
+}
+
 /// Toggle visibility of debug output page in top menu.
 class DebugMenuToggled extends SettingsEvent {
   final bool enabled;

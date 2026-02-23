@@ -10,7 +10,7 @@ import 'package:grammarlens/features/settings/presentation/bloc/settings_state.d
 /// Application settings page.
 ///
 /// Allows the user to configure theme, language, auto-check behaviour,
-/// and editor font size.
+/// editor font size, and AI temperature.
 class SettingsPage extends StatelessWidget {
   const SettingsPage({super.key});
 
@@ -86,6 +86,15 @@ class SettingsPage extends StatelessWidget {
                       onChanged: (value) {
                         context.read<SettingsBloc>().add(
                               AutoCheckToggled(enabled: value),
+                            );
+                      },
+                    ),
+                    const Divider(height: 1),
+                    _AiTemperatureTile(
+                      temperature: prefs.aiTemperature,
+                      onChanged: (value) {
+                        context.read<SettingsBloc>().add(
+                              AiTemperatureChanged(temperature: value),
                             );
                       },
                     ),
@@ -315,6 +324,36 @@ class _FontScaleTile extends StatelessWidget {
       ),
       trailing: Text(
         '${(scale * 100).toStringAsFixed(0)}%',
+        style: AppTypography.labelMedium,
+      ),
+    );
+  }
+}
+
+/// AI temperature slider tile.
+class _AiTemperatureTile extends StatelessWidget {
+  final double temperature;
+  final ValueChanged<double> onChanged;
+
+  const _AiTemperatureTile({
+    required this.temperature,
+    required this.onChanged,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return ListTile(
+      title: const Text('AI Temperature'),
+      subtitle: Slider(
+        value: temperature,
+        min: 0.0,
+        max: 1.0,
+        divisions: 20,
+        label: temperature.toStringAsFixed(2),
+        onChanged: onChanged,
+      ),
+      trailing: Text(
+        temperature.toStringAsFixed(2),
         style: AppTypography.labelMedium,
       ),
     );

@@ -14,6 +14,9 @@ class AppPreferences {
   /// Editor font size scale factor (1.0 = normal).
   final double editorFontScale;
 
+  /// Sampling temperature for AI requests.
+  final double aiTemperature;
+
   /// Whether to show the debug output page in the top menu.
   final bool showDebugMenu;
 
@@ -22,6 +25,7 @@ class AppPreferences {
     this.defaultLanguage = 'auto',
     this.autoCheck = true,
     this.editorFontScale = 1.0,
+    this.aiTemperature = 0.1,
     this.showDebugMenu = true,
   });
 
@@ -30,6 +34,7 @@ class AppPreferences {
     String? defaultLanguage,
     bool? autoCheck,
     double? editorFontScale,
+    double? aiTemperature,
     bool? showDebugMenu,
   }) {
     return AppPreferences(
@@ -37,6 +42,7 @@ class AppPreferences {
       defaultLanguage: defaultLanguage ?? this.defaultLanguage,
       autoCheck: autoCheck ?? this.autoCheck,
       editorFontScale: editorFontScale ?? this.editorFontScale,
+      aiTemperature: aiTemperature ?? this.aiTemperature,
       showDebugMenu: showDebugMenu ?? this.showDebugMenu,
     );
   }
@@ -50,6 +56,7 @@ class AppPreferences {
           defaultLanguage == other.defaultLanguage &&
           autoCheck == other.autoCheck &&
           editorFontScale == other.editorFontScale &&
+          aiTemperature == other.aiTemperature &&
           showDebugMenu == other.showDebugMenu;
 
   @override
@@ -58,6 +65,7 @@ class AppPreferences {
         defaultLanguage,
         autoCheck,
         editorFontScale,
+        aiTemperature,
         showDebugMenu,
       );
 }

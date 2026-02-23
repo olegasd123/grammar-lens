@@ -16,6 +16,7 @@ class SettingsBloc extends Bloc<SettingsEvent, SettingsState> {
     on<DefaultLanguageChanged>(_onDefaultLanguageChanged);
     on<AutoCheckToggled>(_onAutoCheckToggled);
     on<EditorFontScaleChanged>(_onEditorFontScaleChanged);
+    on<AiTemperatureChanged>(_onAiTemperatureChanged);
     on<DebugMenuToggled>(_onDebugMenuToggled);
   }
 
@@ -62,6 +63,16 @@ class SettingsBloc extends Bloc<SettingsEvent, SettingsState> {
     final updated = state.preferences.copyWith(editorFontScale: event.scale);
     emit(state.copyWith(preferences: updated));
     await _repository.saveEditorFontScale(event.scale);
+  }
+
+  Future<void> _onAiTemperatureChanged(
+    AiTemperatureChanged event,
+    Emitter<SettingsState> emit,
+  ) async {
+    final normalized = event.temperature.clamp(0.0, 1.0).toDouble();
+    final updated = state.preferences.copyWith(aiTemperature: normalized);
+    emit(state.copyWith(preferences: updated));
+    await _repository.saveAiTemperature(normalized);
   }
 
   Future<void> _onDebugMenuToggled(

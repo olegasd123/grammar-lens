@@ -5,7 +5,9 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 
 import 'package:grammar_engine/grammar_engine.dart';
 import 'package:grammarlens_ui/grammarlens_ui.dart';
+import 'package:llama_inference/llama_inference.dart';
 
+import 'package:grammarlens/di/injection.dart';
 import 'package:grammarlens/features/debug_output/presentation/pages/debug_output_page.dart';
 import 'package:grammarlens/features/editor/presentation/bloc/editor_bloc.dart';
 import 'package:grammarlens/features/editor/presentation/bloc/editor_event.dart';
@@ -68,15 +70,12 @@ class _EditorPageState extends State<EditorPage> {
 
     _editorBloc?.close();
 
-    final analyzer = GrammarAnalyzer(
-      promptFormat: PromptFormat.phi3Chat,
-      onInfer: (prompt) async {
-        final result = await engine.complete(prompt);
-        return result.text;
-      },
-    );
+    final analyzer = _buildAnalyzer(engine);
 
     _editorBloc = EditorBloc(analyzer: analyzer);
+    if (Platform.isMacOS) {
+      getIt<ExternalCheckBloc>().setAnalyzer(analyzer);
+    }
 
     // Restore text and trigger re-analysis
     if (currentText.isNotEmpty) {
@@ -94,12 +93,34 @@ class _EditorPageState extends State<EditorPage> {
     final currentText = _editorBloc?.state.text ?? '';
     _editorBloc?.close();
     _editorBloc = EditorBloc();
+    if (Platform.isMacOS) {
+      getIt<ExternalCheckBloc>().setAnalyzer(null);
+    }
 
     if (currentText.isNotEmpty) {
       _editorBloc!.add(TextChanged(text: currentText));
     }
 
     setState(() {});
+  }
+
+  GrammarAnalyzer _buildAnalyzer(IsolateInference engine) {
+    return GrammarAnalyzer(
+      promptFormat: PromptFormat.phi3Chat,
+      onInfer: (prompt) async {
+        final temperature = getIt<SettingsBloc>()
+            .state
+            .preferences
+            .aiTemperature
+            .clamp(0.0, 1.0)
+            .toDouble();
+        final config = const InferenceConfig.grammar().copyWith(
+          temperature: temperature,
+        );
+        final result = await engine.complete(prompt, config: config);
+        return result.text;
+      },
+    );
   }
 
   void _syncControllerText(String newText) {
@@ -131,9 +152,7 @@ class _EditorPageState extends State<EditorPage> {
               _onModelReady(context.read<ModelBloc>());
             } else if (modelState.status == ModelStatus.noModel ||
                 modelState.status == ModelStatus.error) {
-              if (_editorBloc?.state.status == AnalysisStatus.analyzing) {
-                _onModelUnloaded();
-              }
+              _onModelUnloaded();
             }
           },
         ),

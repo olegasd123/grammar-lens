@@ -19,7 +19,7 @@ final _log = Logger('ExternalCheckBloc');
 /// 6. Write corrected text back to the external app
 class ExternalCheckBloc extends Bloc<ExternalCheckEvent, ExternalCheckState> {
   final AccessibilityService _accessibilityService;
-  final GrammarAnalyzer? _analyzer;
+  GrammarAnalyzer? _analyzer;
 
   ExternalCheckBloc({
     required AccessibilityService accessibilityService,
@@ -32,6 +32,11 @@ class ExternalCheckBloc extends Bloc<ExternalCheckEvent, ExternalCheckState> {
     on<ExternalCorrectionDismissed>(_onCorrectionDismissed);
     on<ExternalCorrectionsDone>(_onCorrectionsDone);
     on<ExternalCheckDismissed>(_onDismissed);
+  }
+
+  /// Update the analyzer used for external checks.
+  void setAnalyzer(GrammarAnalyzer? analyzer) {
+    _analyzer = analyzer;
   }
 
   // ── Triggered ─────────────────────────────────────────────────────────
@@ -77,7 +82,8 @@ class ExternalCheckBloc extends Bloc<ExternalCheckEvent, ExternalCheckState> {
       _log.info('Read ${text.length} chars from $appName');
 
       // Step 4: Run grammar analysis
-      if (_analyzer == null) {
+      final analyzer = _analyzer;
+      if (analyzer == null) {
         emit(ExternalCheckState(
           status: ExternalCheckStatus.error,
           sourceAppName: appName,
@@ -88,7 +94,7 @@ class ExternalCheckBloc extends Bloc<ExternalCheckEvent, ExternalCheckState> {
         return;
       }
 
-      final result = await _analyzer.analyze(text);
+      final result = await analyzer.analyze(text);
 
       _log.info(
         'Analysis found ${result.corrections.length} corrections '
