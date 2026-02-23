@@ -16,7 +16,8 @@ void main() {
 </corrections>''';
 
       final sentences = [
-        const SentenceSpan(text: 'He dont like it.', startOffset: 0, endOffset: 16),
+        const SentenceSpan(
+            text: 'He dont like it.', startOffset: 0, endOffset: 16),
       ];
 
       final corrections = CorrectionParser.parse(xml, sentences);
@@ -47,7 +48,8 @@ void main() {
 </corrections>''';
 
       final sentences = [
-        const SentenceSpan(text: 'He dont like teh cake.', startOffset: 0, endOffset: 22),
+        const SentenceSpan(
+            text: 'He dont like teh cake.', startOffset: 0, endOffset: 22),
       ];
 
       final corrections = CorrectionParser.parse(xml, sentences);
@@ -59,7 +61,8 @@ void main() {
     test('handles empty corrections block', () {
       const xml = '<corrections></corrections>';
       final sentences = [
-        const SentenceSpan(text: 'Correct sentence.', startOffset: 0, endOffset: 17),
+        const SentenceSpan(
+            text: 'Correct sentence.', startOffset: 0, endOffset: 17),
       ];
 
       final corrections = CorrectionParser.parse(xml, sentences);
@@ -90,13 +93,46 @@ void main() {
 </corrections>''';
 
       final sentences = [
-        const SentenceSpan(text: 'He dont like it.', startOffset: 0, endOffset: 16),
+        const SentenceSpan(
+            text: 'He dont like it.', startOffset: 0, endOffset: 16),
       ];
 
       final corrections = CorrectionParser.parse(xml, sentences);
       expect(corrections, hasLength(1));
       // Should find "dont" by text search
       expect(corrections[0].startOffset, 3);
+    });
+
+    test('parses only the first corrections block from model chatter', () {
+      const xml = '''
+Solution:
+<corrections>
+<item>
+  <original>здровствуй друг</original>
+  <corrected>здравствуй, друг</corrected>
+  <type>spelling</type>
+  <explanation>опечатка</explanation>
+  <offset>0</offset>
+</item>
+</corrections>
+
+Solution 2:
+<corrections></corrections>
+''';
+
+      final sentences = [
+        const SentenceSpan(
+          text: 'здровствуй друг',
+          startOffset: 0,
+          endOffset: 14,
+        ),
+      ];
+
+      final corrections = CorrectionParser.parse(xml, sentences);
+      expect(corrections, hasLength(1));
+      expect(corrections.first.originalText, 'здровствуй друг');
+      expect(corrections.first.correctedText, 'здравствуй, друг');
+      expect(corrections.first.type, CorrectionType.spelling);
     });
   });
 }

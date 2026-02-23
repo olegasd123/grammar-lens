@@ -148,6 +148,7 @@ class LlamaContext {
     // 4. Generate tokens
     final output = StringBuffer();
     final utf8Decoder = _Utf8ChunkDecoder();
+    var stoppedByStopToken = false;
     var pos = tokens.length;
 
     try {
@@ -162,8 +163,16 @@ class LlamaContext {
         final piece = utf8Decoder.add(pieceBytes);
         output.write(piece);
 
-        // Check stop tokens
-        if (_matchesStopToken(output.toString(), config.stopTokens)) break;
+        // Stop at the first stop token occurrence, even if the model
+        // continues with extra text in the same token piece.
+        final trimmed = _trimAtStopToken(output.toString(), config.stopTokens);
+        if (trimmed != null) {
+          output
+            ..clear()
+            ..write(trimmed);
+          stoppedByStopToken = true;
+          break;
+        }
 
         // Decode the new token for next iteration
         final rc = _b.decodeSingle(_nativeContext!, tokenId, pos);
@@ -176,7 +185,10 @@ class LlamaContext {
       _b.samplerFree(sampler);
     }
 
-    output.write(utf8Decoder.close());
+    final tail = utf8Decoder.close();
+    if (!stoppedByStopToken && tail.isNotEmpty) {
+      output.write(tail);
+    }
 
     // 5. Collect perf stats
     final perf = _b.contextPerf(_nativeContext!);
@@ -264,26 +276,47 @@ class LlamaContext {
 
         _b.samplerAccept(sampler, tokenId);
         final pieceBytes = _detokenizeBytes(tokenId);
-        var piece = utf8Decoder.add(pieceBytes);
+        final piece = utf8Decoder.add(pieceBytes);
+        final beforeLen = accumulated.length;
         accumulated.write(piece);
+        var current = accumulated.toString();
 
-        final hitStop = _matchesStopToken(
-          accumulated.toString(),
-          config.stopTokens,
-        );
-        final isLast = hitStop || i == config.maxTokens - 1;
+        var hitStop = false;
+        final trimmed = _trimAtStopToken(current, config.stopTokens);
+        if (trimmed != null) {
+          hitStop = true;
+          accumulated
+            ..clear()
+            ..write(trimmed);
+          current = trimmed;
+        }
 
-        if (isLast) {
+        var isLast = hitStop || i == config.maxTokens - 1;
+        if (isLast && !hitStop) {
           final tail = utf8Decoder.close();
           if (tail.isNotEmpty) {
-            piece = '$piece$tail';
             accumulated.write(tail);
+            current = accumulated.toString();
+            final trimmedTail = _trimAtStopToken(current, config.stopTokens);
+            if (trimmedTail != null) {
+              hitStop = true;
+              accumulated
+                ..clear()
+                ..write(trimmedTail);
+              current = trimmedTail;
+            }
           }
+          isLast = true;
         }
 
-        if (piece.isNotEmpty || isLast) {
-          yield StreamedToken(text: piece, isLast: isLast);
+        final emitStart =
+            beforeLen <= current.length ? beforeLen : current.length;
+        final emitText = current.substring(emitStart);
+
+        if (emitText.isNotEmpty || isLast) {
+          yield StreamedToken(text: emitText, isLast: isLast);
         }
+
         if (isLast) break;
 
         final rc = _b.decodeSingle(_nativeContext!, tokenId, pos);
@@ -395,12 +428,20 @@ class LlamaContext {
     }
   }
 
-  /// Check if the accumulated output ends with any stop token.
-  static bool _matchesStopToken(String text, List<String> stopTokens) {
+  /// Returns the text trimmed at the first stop token (inclusive), or null.
+  static String? _trimAtStopToken(String text, List<String> stopTokens) {
+    var earliestIndex = -1;
+    var matchedStop = '';
     for (final stop in stopTokens) {
-      if (text.endsWith(stop)) return true;
+      final index = text.indexOf(stop);
+      if (index < 0) continue;
+      if (earliestIndex == -1 || index < earliestIndex) {
+        earliestIndex = index;
+        matchedStop = stop;
+      }
     }
-    return false;
+    if (earliestIndex == -1) return null;
+    return text.substring(0, earliestIndex + matchedStop.length);
   }
 }
 

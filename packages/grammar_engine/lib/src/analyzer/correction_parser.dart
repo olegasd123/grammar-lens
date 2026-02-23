@@ -20,13 +20,14 @@ class CorrectionParser {
     List<SentenceSpan> sentences, {
     int baseOffset = 0,
   }) {
+    final primaryBlock = _extractPrimaryCorrectionsBlock(xml) ?? xml;
     final corrections = <Correction>[];
     final itemPattern = RegExp(
       '<item>(.*?)</item>',
       dotAll: true,
     );
 
-    for (final match in itemPattern.allMatches(xml)) {
+    for (final match in itemPattern.allMatches(primaryBlock)) {
       final itemXml = match.group(1);
       if (itemXml == null) continue;
 
@@ -37,6 +38,14 @@ class CorrectionParser {
     }
 
     return corrections;
+  }
+
+  static String? _extractPrimaryCorrectionsBlock(String xml) {
+    final blockPattern = RegExp(
+      '<corrections>[\\s\\S]*?</corrections>',
+      caseSensitive: false,
+    );
+    return blockPattern.firstMatch(xml)?.group(0);
   }
 
   /// Parse a single `<item>` block into a [Correction].
