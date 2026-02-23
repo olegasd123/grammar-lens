@@ -43,11 +43,8 @@ class ReadabilityScorer {
     switch (language) {
       case SupportedLanguage.english:
         return _scoreEnglish(wordsPerSentence, syllablesPerWord);
-      case SupportedLanguage.spanish:
-      case SupportedLanguage.french:
-      case SupportedLanguage.german:
-      case SupportedLanguage.portuguese:
-        // Use adapted Flesch formula for other languages
+      default:
+        // Use adapted Flesch formula for non-English languages.
         return _scoreGeneric(wordsPerSentence, syllablesPerWord);
     }
   }

@@ -62,6 +62,25 @@ void main() {
       expect(result, isEmpty);
     });
 
+    test('getModelsForLanguage maps zh-Hant aliases to zh models', () {
+      const zhModel = ModelInfo(
+        id: 'zh-q4km',
+        displayName: 'Chinese Standard',
+        languages: ['zh'],
+        quantization: 'Q4_K_M',
+        fileSizeBytes: 2300000000,
+        sha256: 'sha-zh-q4',
+        downloadUrl: 'https://example.com/zh-q4.gguf',
+        minAppVersion: '0.1.0',
+        contextLength: 4096,
+      );
+      const zhManifest = ModelManifest(models: [zhModel]);
+
+      final zhHantModels = zhManifest.getModelsForLanguage('zh-Hant');
+      expect(zhHantModels, hasLength(1));
+      expect(zhHantModels.first.id, 'zh-q4km');
+    });
+
     test('getModelById finds existing model', () {
       final model = manifest.getModelById('es-q4km');
       expect(model, isNotNull);
@@ -145,6 +164,7 @@ void main() {
           containsAll([
             'ar',
             'zh',
+            'zh-hant',
             'cs',
             'nl',
             'en',

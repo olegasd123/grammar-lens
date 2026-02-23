@@ -1,6 +1,15 @@
 import 'package:grammar_engine/src/analyzer/sentence_splitter.dart';
 import 'package:grammar_engine/src/models/language.dart';
 
+/// Prompt serialization style for different model families.
+enum PromptFormat {
+  /// Phi-style chat tokens (`<|system|>`, `<|user|>`, `<|assistant|>`).
+  phi3Chat,
+
+  /// Plain instruction text without model-specific chat tokens.
+  plainInstruction,
+}
+
 /// Builds prompts for the grammar correction model.
 ///
 /// Each language has a tailored system prompt that instructs the model
@@ -14,12 +23,32 @@ class PromptBuilder {
   /// [language] - Target language for grammar rules.
   static String build(
     List<SentenceSpan> sentences,
-    SupportedLanguage language,
-  ) {
+    SupportedLanguage language, {
+    PromptFormat format = PromptFormat.phi3Chat,
+  }) {
     final sentenceText = sentences.map((s) => s.text).join('\n');
-    final systemPrompt = _systemPrompts[language]!;
-    final userInstruction = _userInstructions[language]!;
+    final systemPrompt = _systemPrompt(language);
+    final userInstruction = _userInstruction(language);
 
+    return switch (format) {
+      PromptFormat.phi3Chat => _buildPhi3Prompt(
+          systemPrompt: systemPrompt,
+          userInstruction: userInstruction,
+          sentenceText: sentenceText,
+        ),
+      PromptFormat.plainInstruction => _buildPlainPrompt(
+          systemPrompt: systemPrompt,
+          userInstruction: userInstruction,
+          sentenceText: sentenceText,
+        ),
+    };
+  }
+
+  static String _buildPhi3Prompt({
+    required String systemPrompt,
+    required String userInstruction,
+    required String sentenceText,
+  }) {
     return '<|system|>\n'
         '$systemPrompt\n'
         '<|end|>\n'
@@ -32,33 +61,71 @@ class PromptBuilder {
         '<|assistant|>\n';
   }
 
-  /// Language-specific system prompts.
-  static const _systemPrompts = {
-    SupportedLanguage.english: _englishSystemPrompt,
-    SupportedLanguage.spanish: _spanishSystemPrompt,
-    SupportedLanguage.french: _frenchSystemPrompt,
-    SupportedLanguage.german: _germanSystemPrompt,
-    SupportedLanguage.portuguese: _portugueseSystemPrompt,
-  };
+  static String _buildPlainPrompt({
+    required String systemPrompt,
+    required String userInstruction,
+    required String sentenceText,
+  }) {
+    return '$systemPrompt\n\n'
+        '$userInstruction\n\n'
+        'Input text:\n'
+        '"""\n'
+        '$sentenceText\n'
+        '"""\n\n'
+        'Return only XML in the required <corrections> format.';
+  }
 
-  /// Language-specific user instructions.
-  static const _userInstructions = {
-    SupportedLanguage.english:
-        'Analyze the following text for grammar, spelling, punctuation, '
-            'and style errors:',
-    SupportedLanguage.spanish:
-        'Analiza el siguiente texto en busca de errores gramaticales, '
-            'ortográficos, de puntuación y de estilo:',
-    SupportedLanguage.french:
-        'Analysez le texte suivant pour détecter les erreurs de grammaire, '
-            "d'orthographe, de ponctuation et de style:",
-    SupportedLanguage.german:
-        'Analysieren Sie den folgenden Text auf Grammatik-, Rechtschreib-, '
-            'Zeichensetzungs- und Stilfehler:',
-    SupportedLanguage.portuguese:
-        'Analise o seguinte texto em busca de erros gramaticais, '
-            'ortográficos, de pontuação e de estilo:',
-  };
+  static String _systemPrompt(SupportedLanguage language) {
+    return switch (language) {
+      SupportedLanguage.english => _englishSystemPrompt,
+      SupportedLanguage.spanish => _spanishSystemPrompt,
+      SupportedLanguage.french => _frenchSystemPrompt,
+      SupportedLanguage.german => _germanSystemPrompt,
+      SupportedLanguage.portuguese => _portugueseSystemPrompt,
+      SupportedLanguage.russian => _russianSystemPrompt,
+      _ => _genericSystemPrompt(language),
+    };
+  }
+
+  static String _userInstruction(SupportedLanguage language) {
+    return switch (language) {
+      SupportedLanguage.english =>
+        'Analyze the following text for grammar, spelling, punctuation, and style errors:',
+      SupportedLanguage.spanish =>
+        'Analiza el siguiente texto en busca de errores gramaticales, ortográficos, de puntuación y de estilo:',
+      SupportedLanguage.french =>
+        "Analysez le texte suivant pour détecter les erreurs de grammaire, d'orthographe, de ponctuation et de style:",
+      SupportedLanguage.german =>
+        'Analysieren Sie den folgenden Text auf Grammatik-, Rechtschreib-, Zeichensetzungs- und Stilfehler:',
+      SupportedLanguage.portuguese =>
+        'Analise o seguinte texto em busca de erros gramaticais, ortográficos, de pontuação e de estilo:',
+      SupportedLanguage.russian =>
+        'Проверь следующий текст на грамматические, орфографические, пунктуационные и стилевые ошибки:',
+      _ =>
+        'Analyze the following ${language.displayName} text for grammar, spelling, punctuation, and style errors:',
+    };
+  }
+
+  static String _genericSystemPrompt(SupportedLanguage language) => '''
+You are a precise ${language.displayName} grammar checker. Analyze the input text and output corrections in XML format.
+
+Rules:
+- Only report actual errors. Do not flag correct usage.
+- For each error, provide the original text span, the corrected text, the error type, and a brief explanation.
+- Error types: grammar, spelling, punctuation, style.
+- If there are no errors, output an empty <corrections></corrections> block.
+- Be conservative: when unsure, do not flag.
+
+Output format:
+<corrections>
+<item>
+  <original>erroneous text span</original>
+  <corrected>fixed text span</corrected>
+  <type>grammar|spelling|punctuation|style</type>
+  <explanation>brief explanation of the error</explanation>
+  <offset>character offset in input</offset>
+</item>
+</corrections>''';
 
   static const _englishSystemPrompt = '''
 You are a precise English grammar checker. Analyze the input text and output corrections in XML format.
@@ -145,6 +212,29 @@ Ausgabeformat:
   <type>grammar|spelling|punctuation|style</type>
   <explanation>kurze Erklärung des Fehlers</explanation>
   <offset>Zeichenversatz in der Eingabe</offset>
+</item>
+</corrections>''';
+
+  static const _russianSystemPrompt = '''
+Ты точный корректор русского языка. Проанализируй входной текст и верни исправления в XML формате.
+
+Правила:
+- Указывай только реальные ошибки. Не отмечай правильный текст.
+- Для каждой ошибки укажи исходный фрагмент, исправленный фрагмент, тип ошибки и короткое объяснение.
+- Типы ошибок: grammar, spelling, punctuation, style.
+- Если ошибок нет, верни пустой блок <corrections></corrections>.
+- Будь консервативным: если не уверен, не отмечай.
+- Проверяй орфографию и грамматику, включая частые опечатки и ошибки согласования.
+- Для опечаток всегда предлагай правильную форму (например, «здровствуй» -> «здравствуй»).
+
+Формат вывода:
+<corrections>
+<item>
+  <original>ошибочный фрагмент</original>
+  <corrected>исправленный фрагмент</corrected>
+  <type>grammar|spelling|punctuation|style</type>
+  <explanation>краткое объяснение ошибки</explanation>
+  <offset>смещение символа во входном тексте</offset>
 </item>
 </corrections>''';
 

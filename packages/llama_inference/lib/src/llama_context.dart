@@ -1,5 +1,7 @@
+import 'dart:convert';
 import 'dart:ffi';
 import 'dart:io' show Platform;
+import 'dart:typed_data';
 
 import 'package:ffi/ffi.dart';
 import 'package:llama_inference/src/bindings/llama_bindings.dart';
@@ -145,6 +147,7 @@ class LlamaContext {
 
     // 4. Generate tokens
     final output = StringBuffer();
+    final utf8Decoder = _Utf8ChunkDecoder();
     var pos = tokens.length;
 
     try {
@@ -155,7 +158,8 @@ class LlamaContext {
 
         _b.samplerAccept(sampler, tokenId);
 
-        final piece = _detokenize(tokenId);
+        final pieceBytes = _detokenizeBytes(tokenId);
+        final piece = utf8Decoder.add(pieceBytes);
         output.write(piece);
 
         // Check stop tokens
@@ -171,6 +175,8 @@ class LlamaContext {
     } finally {
       _b.samplerFree(sampler);
     }
+
+    output.write(utf8Decoder.close());
 
     // 5. Collect perf stats
     final perf = _b.contextPerf(_nativeContext!);
@@ -242,6 +248,7 @@ class LlamaContext {
 
     // 4. Generate and yield tokens
     final accumulated = StringBuffer();
+    final utf8Decoder = _Utf8ChunkDecoder();
     var pos = tokens.length;
 
     try {
@@ -250,12 +257,14 @@ class LlamaContext {
         final isEog = _b.tokenIsEog(model.nativePointer, tokenId);
 
         if (isEog) {
-          yield const StreamedToken(text: '', isLast: true);
+          final tail = utf8Decoder.close();
+          yield StreamedToken(text: tail, isLast: true);
           break;
         }
 
         _b.samplerAccept(sampler, tokenId);
-        final piece = _detokenize(tokenId);
+        final pieceBytes = _detokenizeBytes(tokenId);
+        var piece = utf8Decoder.add(pieceBytes);
         accumulated.write(piece);
 
         final hitStop = _matchesStopToken(
@@ -264,7 +273,17 @@ class LlamaContext {
         );
         final isLast = hitStop || i == config.maxTokens - 1;
 
-        yield StreamedToken(text: piece, isLast: isLast);
+        if (isLast) {
+          final tail = utf8Decoder.close();
+          if (tail.isNotEmpty) {
+            piece = '$piece$tail';
+            accumulated.write(tail);
+          }
+        }
+
+        if (piece.isNotEmpty || isLast) {
+          yield StreamedToken(text: piece, isLast: isLast);
+        }
         if (isLast) break;
 
         final rc = _b.decodeSingle(_nativeContext!, tokenId, pos);
@@ -310,7 +329,7 @@ class LlamaContext {
   /// Tokenize a string, returning a list of token IDs.
   List<int> _tokenize(String text, {bool addSpecial = true}) {
     final textNative = text.toNativeUtf8();
-    final textLen = text.length;
+    final textLen = utf8.encode(text).length;
 
     // First call: get required token count
     final nTokens = _b.tokenize(
@@ -346,20 +365,34 @@ class LlamaContext {
     return result;
   }
 
-  /// Detokenize a single token ID to a string.
-  String _detokenize(int token) {
-    final buf = calloc<Uint8>(128);
-    final len =
-        _b.tokenToPiece(model.nativePointer, token, buf.cast<Utf8>(), 128);
-    if (len <= 0) {
+  /// Detokenize a single token ID to UTF-8 bytes.
+  Uint8List _detokenizeBytes(int token) {
+    var bufferSize = 128;
+    while (true) {
+      final buf = calloc<Uint8>(bufferSize);
+      final len = _b.tokenToPiece(
+        model.nativePointer,
+        token,
+        buf.cast<Utf8>(),
+        bufferSize,
+      );
+      if (len == 0) {
+        calloc.free(buf);
+        return Uint8List(0);
+      }
+
+      // Some backends return required size when buffer is too small.
+      if (len >= bufferSize || len < 0) {
+        final requiredSize = len < 0 ? -len : len + 1;
+        calloc.free(buf);
+        bufferSize = requiredSize > bufferSize ? requiredSize : bufferSize * 2;
+        continue;
+      }
+
+      final bytes = Uint8List.fromList(buf.asTypedList(len));
       calloc.free(buf);
-      return '';
+      return bytes;
     }
-    // Read exactly `len` bytes from the buffer
-    final result = buf.asTypedList(len);
-    final str = String.fromCharCodes(result);
-    calloc.free(buf);
-    return str;
   }
 
   /// Check if the accumulated output ends with any stop token.
@@ -368,6 +401,35 @@ class LlamaContext {
       if (text.endsWith(stop)) return true;
     }
     return false;
+  }
+}
+
+class _Utf8ChunkDecoder {
+  final StringBuffer _buffer = StringBuffer();
+  late final ByteConversionSink _sink;
+
+  _Utf8ChunkDecoder() {
+    _sink = const Utf8Decoder(allowMalformed: true).startChunkedConversion(
+      StringConversionSink.withCallback(_buffer.write),
+    );
+  }
+
+  String add(Uint8List bytes) {
+    if (bytes.isEmpty) return '';
+    _sink.add(bytes);
+    return _drain();
+  }
+
+  String close() {
+    _sink.close();
+    return _drain();
+  }
+
+  String _drain() {
+    if (_buffer.isEmpty) return '';
+    final value = _buffer.toString();
+    _buffer.clear();
+    return value;
   }
 }
 

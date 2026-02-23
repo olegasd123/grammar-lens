@@ -17,11 +17,15 @@ class AnalysisResult {
   /// Time taken for the analysis in milliseconds.
   final int analysisTimeMs;
 
+  /// Raw model output captured during analysis (for debugging).
+  final String? rawModelOutput;
+
   const AnalysisResult({
     required this.corrections,
     required this.language,
     this.statistics,
     this.analysisTimeMs = 0,
+    this.rawModelOutput,
   });
 
   /// Number of corrections found.

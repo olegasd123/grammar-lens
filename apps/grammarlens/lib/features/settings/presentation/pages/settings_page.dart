@@ -89,6 +89,19 @@ class SettingsPage extends StatelessWidget {
                             );
                       },
                     ),
+                    const Divider(height: 1),
+                    SwitchListTile(
+                      title: const Text('Show Debug Output in Menu'),
+                      subtitle: const Text(
+                        'Show a Debug page button in the top menu.',
+                      ),
+                      value: prefs.showDebugMenu,
+                      onChanged: (value) {
+                        context.read<SettingsBloc>().add(
+                              DebugMenuToggled(enabled: value),
+                            );
+                      },
+                    ),
                   ],
                 ),
               ),
@@ -211,6 +224,10 @@ class _DefaultLanguageTile extends StatelessWidget {
             value: 'zh',
             child: Text('Chinese (Simplified)'),
           ),
+          DropdownMenuItem(
+            value: 'zh-hant',
+            child: Text('Chinese (Traditional)'),
+          ),
           DropdownMenuItem(value: 'cs', child: Text('Czech')),
           DropdownMenuItem(value: 'nl', child: Text('Dutch')),
           DropdownMenuItem(value: 'en', child: Text('English')),
@@ -238,13 +255,16 @@ class _DefaultLanguageTile extends StatelessWidget {
   }
 
   String _languageName(String code) {
-    return switch (code) {
+    final normalized = code.trim().toLowerCase();
+    return switch (normalized) {
       'auto' => 'Auto-detect',
       'ar' => 'Arabic',
       'zh' => 'Chinese (Simplified)',
-      'zh-Hans' => 'Chinese (Simplified)',
-      'zh-Hant' => 'Chinese (Traditional)',
-      'zh-TW' => 'Chinese (Traditional)',
+      'zh-hans' => 'Chinese (Simplified)',
+      'zh-hant' => 'Chinese (Traditional)',
+      'zh-tw' => 'Chinese (Traditional)',
+      'zh-hk' => 'Chinese (Traditional)',
+      'zh-mo' => 'Chinese (Traditional)',
       'cs' => 'Czech',
       'nl' => 'Dutch',
       'en' => 'English',
@@ -266,7 +286,7 @@ class _DefaultLanguageTile extends StatelessWidget {
       'tr' => 'Turkish',
       'uk' => 'Ukrainian',
       'vi' => 'Vietnamese',
-      _ => code.toUpperCase(),
+      _ => normalized.toUpperCase(),
     };
   }
 }

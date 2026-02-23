@@ -40,6 +40,22 @@ void main() {
       expect(result, SupportedLanguage.portuguese);
     });
 
+    test('detects short Russian text by Cyrillic script', () {
+      final result = detector.detect('Здровствуй, друг');
+      expect(result, SupportedLanguage.russian);
+    });
+
+    test('detects Ukrainian text by unique letters', () {
+      final result =
+          detector.detect('Привіт, друже! Це український текст із літерою ї.');
+      expect(result, SupportedLanguage.ukrainian);
+    });
+
+    test('detects Arabic text by script', () {
+      final result = detector.detect('مرحبا يا صديقي');
+      expect(result, SupportedLanguage.arabic);
+    });
+
     test('defaults to English for very short text', () {
       final result = detector.detect('Hi');
       expect(result, SupportedLanguage.english);
@@ -64,6 +80,12 @@ void main() {
           expect(englishScore, greaterThanOrEqualTo(entry.value));
         }
       }
+    });
+
+    test('returns script-based confidence for short Russian text', () {
+      final scores = detector.detectWithConfidence('Здровствуй, друг');
+      expect(scores[SupportedLanguage.russian], 1.0);
+      expect(scores[SupportedLanguage.english], 0.0);
     });
   });
 }

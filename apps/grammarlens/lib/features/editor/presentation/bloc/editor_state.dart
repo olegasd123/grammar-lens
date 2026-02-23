@@ -38,6 +38,9 @@ class EditorState {
   /// Error message if status is [AnalysisStatus.error].
   final String? errorMessage;
 
+  /// Raw model output from the last analysis (debug view).
+  final String? rawModelOutput;
+
   const EditorState({
     this.text = '',
     this.status = AnalysisStatus.idle,
@@ -46,6 +49,7 @@ class EditorState {
     this.selectedLanguage,
     this.detectedLanguage,
     this.errorMessage,
+    this.rawModelOutput,
   });
 
   /// Number of active (not accepted, not dismissed) corrections.
@@ -53,8 +57,7 @@ class EditorState {
       corrections.where((c) => !c.isAccepted && !c.isDismissed).length;
 
   /// The effective language (user-selected or auto-detected).
-  String get effectiveLanguage =>
-      selectedLanguage ?? detectedLanguage ?? 'en';
+  String get effectiveLanguage => selectedLanguage ?? detectedLanguage ?? 'en';
 
   EditorState copyWith({
     String? text,
@@ -62,17 +65,24 @@ class EditorState {
     List<Correction>? corrections,
     TextStats? statistics,
     String? selectedLanguage,
+    bool clearSelectedLanguage = false,
     String? detectedLanguage,
     String? errorMessage,
+    String? rawModelOutput,
+    bool clearRawModelOutput = false,
   }) {
     return EditorState(
       text: text ?? this.text,
       status: status ?? this.status,
       corrections: corrections ?? this.corrections,
       statistics: statistics ?? this.statistics,
-      selectedLanguage: selectedLanguage ?? this.selectedLanguage,
+      selectedLanguage: clearSelectedLanguage
+          ? null
+          : (selectedLanguage ?? this.selectedLanguage),
       detectedLanguage: detectedLanguage ?? this.detectedLanguage,
       errorMessage: errorMessage ?? this.errorMessage,
+      rawModelOutput:
+          clearRawModelOutput ? null : (rawModelOutput ?? this.rawModelOutput),
     );
   }
 }

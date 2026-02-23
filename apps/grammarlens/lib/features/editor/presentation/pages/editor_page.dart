@@ -6,6 +6,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:grammar_engine/grammar_engine.dart';
 import 'package:grammarlens_ui/grammarlens_ui.dart';
 
+import 'package:grammarlens/features/debug_output/presentation/pages/debug_output_page.dart';
 import 'package:grammarlens/features/editor/presentation/bloc/editor_bloc.dart';
 import 'package:grammarlens/features/editor/presentation/bloc/editor_event.dart';
 import 'package:grammarlens/features/editor/presentation/bloc/editor_state.dart';
@@ -19,6 +20,7 @@ import 'package:grammarlens/features/model_manager/presentation/bloc/model_state
 import 'package:grammarlens/features/model_manager/presentation/pages/model_manager_page.dart';
 import 'package:grammarlens/features/model_manager/presentation/widgets/model_status_bar.dart';
 import 'package:grammarlens/features/settings/presentation/bloc/settings_bloc.dart';
+import 'package:grammarlens/features/settings/presentation/bloc/settings_state.dart';
 import 'package:grammarlens/features/settings/presentation/pages/settings_page.dart';
 import 'package:grammarlens/features/statistics/presentation/pages/statistics_page.dart';
 
@@ -60,13 +62,20 @@ class _EditorPageState extends State<EditorPage> {
   void _onModelReady(ModelBloc modelBloc) {
     final engine = modelBloc.engine;
     if (engine == null) return;
+    final activeModel = modelBloc.state.activeModel;
 
     final currentText = _editorBloc?.state.text ?? '';
     final currentLanguage = _editorBloc?.state.selectedLanguage;
 
     _editorBloc?.close();
 
+    final promptFormat = activeModel != null &&
+            activeModel.id.toLowerCase().startsWith('aya-23-8b')
+        ? PromptFormat.plainInstruction
+        : PromptFormat.phi3Chat;
+
     final analyzer = GrammarAnalyzer(
+      promptFormat: promptFormat,
       onInfer: (prompt) async {
         final result = await engine.complete(prompt);
         return result.text;
@@ -157,13 +166,13 @@ class _EditorPageState extends State<EditorPage> {
               // Language selector
               BlocBuilder<EditorBloc, EditorState>(
                 buildWhen: (prev, curr) =>
-                    prev.effectiveLanguage != curr.effectiveLanguage,
+                    prev.selectedLanguage != curr.selectedLanguage,
                 builder: (context, state) {
                   return LanguageSelector(
                     selectedCode: state.selectedLanguage ?? 'auto',
                     onChanged: (code) {
                       _editorBloc!.add(LanguageChanged(
-                        languageCode: code == 'auto' ? 'en' : code,
+                        languageCode: code,
                       ));
                     },
                   );
@@ -194,6 +203,31 @@ class _EditorPageState extends State<EditorPage> {
                 },
                 icon: const Icon(Icons.bar_chart_rounded),
                 tooltip: 'Statistics',
+              ),
+
+              BlocBuilder<SettingsBloc, SettingsState>(
+                buildWhen: (prev, curr) =>
+                    prev.preferences.showDebugMenu !=
+                    curr.preferences.showDebugMenu,
+                builder: (context, settingsState) {
+                  if (!settingsState.preferences.showDebugMenu) {
+                    return const SizedBox.shrink();
+                  }
+                  return IconButton(
+                    onPressed: () {
+                      Navigator.of(context).push(
+                        MaterialPageRoute<void>(
+                          builder: (_) => BlocProvider.value(
+                            value: _editorBloc!,
+                            child: const DebugOutputPage(),
+                          ),
+                        ),
+                      );
+                    },
+                    icon: const Icon(Icons.bug_report_outlined),
+                    tooltip: 'Debug Output',
+                  );
+                },
               ),
 
               // Model manager button

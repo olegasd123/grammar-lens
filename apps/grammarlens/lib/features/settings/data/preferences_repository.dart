@@ -9,6 +9,7 @@ abstract final class _Keys {
   static const defaultLanguage = 'pref_default_language';
   static const autoCheck = 'pref_auto_check';
   static const editorFontScale = 'pref_editor_font_scale';
+  static const showDebugMenu = 'pref_show_debug_menu';
 }
 
 /// Persists and loads [AppPreferences] via SharedPreferences.
@@ -26,15 +27,17 @@ class PreferencesRepository {
     final prefs = await _ensurePrefs();
 
     final themeModeIndex = prefs.getInt(_Keys.themeMode);
-    final themeMode = themeModeIndex != null && themeModeIndex < ThemeMode.values.length
-        ? ThemeMode.values[themeModeIndex]
-        : ThemeMode.system;
+    final themeMode =
+        themeModeIndex != null && themeModeIndex < ThemeMode.values.length
+            ? ThemeMode.values[themeModeIndex]
+            : ThemeMode.system;
 
     return AppPreferences(
       themeMode: themeMode,
       defaultLanguage: prefs.getString(_Keys.defaultLanguage) ?? 'auto',
       autoCheck: prefs.getBool(_Keys.autoCheck) ?? true,
       editorFontScale: prefs.getDouble(_Keys.editorFontScale) ?? 1.0,
+      showDebugMenu: prefs.getBool(_Keys.showDebugMenu) ?? true,
     );
   }
 
@@ -60,5 +63,11 @@ class PreferencesRepository {
   Future<void> saveEditorFontScale(double scale) async {
     final prefs = await _ensurePrefs();
     await prefs.setDouble(_Keys.editorFontScale, scale);
+  }
+
+  /// Persist visibility of the debug menu item.
+  Future<void> saveShowDebugMenu({required bool enabled}) async {
+    final prefs = await _ensurePrefs();
+    await prefs.setBool(_Keys.showDebugMenu, enabled);
   }
 }

@@ -16,6 +16,7 @@ class SettingsBloc extends Bloc<SettingsEvent, SettingsState> {
     on<DefaultLanguageChanged>(_onDefaultLanguageChanged);
     on<AutoCheckToggled>(_onAutoCheckToggled);
     on<EditorFontScaleChanged>(_onEditorFontScaleChanged);
+    on<DebugMenuToggled>(_onDebugMenuToggled);
   }
 
   Future<void> _onLoaded(
@@ -61,5 +62,14 @@ class SettingsBloc extends Bloc<SettingsEvent, SettingsState> {
     final updated = state.preferences.copyWith(editorFontScale: event.scale);
     emit(state.copyWith(preferences: updated));
     await _repository.saveEditorFontScale(event.scale);
+  }
+
+  Future<void> _onDebugMenuToggled(
+    DebugMenuToggled event,
+    Emitter<SettingsState> emit,
+  ) async {
+    final updated = state.preferences.copyWith(showDebugMenu: event.enabled);
+    emit(state.copyWith(preferences: updated));
+    await _repository.saveShowDebugMenu(enabled: event.enabled);
   }
 }

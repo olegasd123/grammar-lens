@@ -65,6 +65,16 @@ void main() {
           expect(bloc.state.effectiveLanguage, 'fr');
         },
       );
+
+      blocTest<EditorBloc, EditorState>(
+        'sets selectedLanguage to null for auto-detect',
+        build: EditorBloc.new,
+        seed: () => const EditorState(selectedLanguage: 'fr'),
+        act: (bloc) => bloc.add(const LanguageChanged(languageCode: 'auto')),
+        verify: (bloc) {
+          expect(bloc.state.selectedLanguage, isNull);
+        },
+      );
     });
 
     group('AnalyzeRequested', () {
@@ -72,8 +82,7 @@ void main() {
         'is no-op without analyzer',
         build: EditorBloc.new,
         seed: () => const EditorState(text: 'Some text'),
-        act: (bloc) =>
-            bloc.add(const AnalyzeRequested(text: 'Some text')),
+        act: (bloc) => bloc.add(const AnalyzeRequested(text: 'Some text')),
         expect: () => <EditorState>[],
       );
 
@@ -107,12 +116,12 @@ void main() {
                   ),
                 ],
                 language: SupportedLanguage.english,
+                rawModelOutput: '<corrections><item>...</item></corrections>',
               ));
         },
         build: () => EditorBloc(analyzer: mockAnalyzer),
         seed: () => const EditorState(text: 'Helo world'),
-        act: (bloc) =>
-            bloc.add(const AnalyzeRequested(text: 'Helo world')),
+        act: (bloc) => bloc.add(const AnalyzeRequested(text: 'Helo world')),
         expect: () => [
           // First: analyzing status
           isA<EditorState>().having(
@@ -124,7 +133,8 @@ void main() {
           isA<EditorState>()
               .having((s) => s.status, 'status', AnalysisStatus.complete)
               .having((s) => s.corrections, 'corrections', hasLength(1))
-              .having((s) => s.detectedLanguage, 'detectedLanguage', 'en'),
+              .having((s) => s.detectedLanguage, 'detectedLanguage', 'en')
+              .having((s) => s.rawModelOutput, 'rawModelOutput', isNotNull),
         ],
       );
 
@@ -138,8 +148,7 @@ void main() {
         },
         build: () => EditorBloc(analyzer: mockAnalyzer),
         seed: () => const EditorState(text: 'Test text'),
-        act: (bloc) =>
-            bloc.add(const AnalyzeRequested(text: 'Test text')),
+        act: (bloc) => bloc.add(const AnalyzeRequested(text: 'Test text')),
         expect: () => [
           isA<EditorState>().having(
             (s) => s.status,
@@ -170,8 +179,7 @@ void main() {
           text: 'Helo world',
           corrections: [correction],
         ),
-        act: (bloc) =>
-            bloc.add(CorrectionAccepted(correction: correction)),
+        act: (bloc) => bloc.add(CorrectionAccepted(correction: correction)),
         verify: (bloc) {
           expect(bloc.state.text, 'Hello world');
         },
@@ -184,12 +192,10 @@ void main() {
           text: 'Helo world',
           corrections: [correction],
         ),
-        act: (bloc) =>
-            bloc.add(CorrectionAccepted(correction: correction)),
+        act: (bloc) => bloc.add(CorrectionAccepted(correction: correction)),
         verify: (bloc) {
-          final accepted = bloc.state.corrections
-              .where((c) => c.isAccepted)
-              .toList();
+          final accepted =
+              bloc.state.corrections.where((c) => c.isAccepted).toList();
           expect(accepted, hasLength(1));
         },
       );
@@ -211,13 +217,11 @@ void main() {
             ),
           ],
         ),
-        act: (bloc) =>
-            bloc.add(CorrectionAccepted(correction: correction)),
+        act: (bloc) => bloc.add(CorrectionAccepted(correction: correction)),
         verify: (bloc) {
           // Second correction should have shifted by +1
-          final secondCorrection = bloc.state.corrections
-              .where((c) => !c.isAccepted)
-              .first;
+          final secondCorrection =
+              bloc.state.corrections.where((c) => !c.isAccepted).first;
           expect(secondCorrection.startOffset, 6);
           expect(secondCorrection.endOffset, 11);
         },
@@ -241,8 +245,7 @@ void main() {
           text: 'test sentence',
           corrections: [correction],
         ),
-        act: (bloc) =>
-            bloc.add(CorrectionDismissed(correction: correction)),
+        act: (bloc) => bloc.add(CorrectionDismissed(correction: correction)),
         verify: (bloc) {
           expect(bloc.state.corrections, isEmpty);
         },
@@ -255,8 +258,7 @@ void main() {
           text: 'test sentence',
           corrections: [correction],
         ),
-        act: (bloc) =>
-            bloc.add(CorrectionDismissed(correction: correction)),
+        act: (bloc) => bloc.add(CorrectionDismissed(correction: correction)),
         verify: (bloc) {
           expect(bloc.state.text, 'test sentence');
         },

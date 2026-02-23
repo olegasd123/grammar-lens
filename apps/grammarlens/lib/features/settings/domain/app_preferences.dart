@@ -14,11 +14,15 @@ class AppPreferences {
   /// Editor font size scale factor (1.0 = normal).
   final double editorFontScale;
 
+  /// Whether to show the debug output page in the top menu.
+  final bool showDebugMenu;
+
   const AppPreferences({
     this.themeMode = ThemeMode.system,
     this.defaultLanguage = 'auto',
     this.autoCheck = true,
     this.editorFontScale = 1.0,
+    this.showDebugMenu = true,
   });
 
   AppPreferences copyWith({
@@ -26,12 +30,14 @@ class AppPreferences {
     String? defaultLanguage,
     bool? autoCheck,
     double? editorFontScale,
+    bool? showDebugMenu,
   }) {
     return AppPreferences(
       themeMode: themeMode ?? this.themeMode,
       defaultLanguage: defaultLanguage ?? this.defaultLanguage,
       autoCheck: autoCheck ?? this.autoCheck,
       editorFontScale: editorFontScale ?? this.editorFontScale,
+      showDebugMenu: showDebugMenu ?? this.showDebugMenu,
     );
   }
 
@@ -43,7 +49,8 @@ class AppPreferences {
           themeMode == other.themeMode &&
           defaultLanguage == other.defaultLanguage &&
           autoCheck == other.autoCheck &&
-          editorFontScale == other.editorFontScale;
+          editorFontScale == other.editorFontScale &&
+          showDebugMenu == other.showDebugMenu;
 
   @override
   int get hashCode => Object.hash(
@@ -51,5 +58,6 @@ class AppPreferences {
         defaultLanguage,
         autoCheck,
         editorFontScale,
+        showDebugMenu,
       );
 }

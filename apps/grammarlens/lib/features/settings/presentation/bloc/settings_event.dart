@@ -33,3 +33,9 @@ class EditorFontScaleChanged extends SettingsEvent {
   final double scale;
   const EditorFontScaleChanged({required this.scale});
 }
+
+/// Toggle visibility of debug output page in top menu.
+class DebugMenuToggled extends SettingsEvent {
+  final bool enabled;
+  const DebugMenuToggled({required this.enabled});
+}

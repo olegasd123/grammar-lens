@@ -149,12 +149,15 @@ class ModelManagerPage extends StatelessWidget {
   }
 
   String _languageName(String code) {
-    return switch (code) {
+    final normalized = code.trim().toLowerCase();
+    return switch (normalized) {
       'ar' => 'Arabic',
       'zh' => 'Chinese (Simplified)',
-      'zh-Hans' => 'Chinese (Simplified)',
-      'zh-Hant' => 'Chinese (Traditional)',
-      'zh-TW' => 'Chinese (Traditional)',
+      'zh-hans' => 'Chinese (Simplified)',
+      'zh-hant' => 'Chinese (Traditional)',
+      'zh-tw' => 'Chinese (Traditional)',
+      'zh-hk' => 'Chinese (Traditional)',
+      'zh-mo' => 'Chinese (Traditional)',
       'cs' => 'Czech',
       'nl' => 'Dutch',
       'en' => 'English',
@@ -176,7 +179,7 @@ class ModelManagerPage extends StatelessWidget {
       'tr' => 'Turkish',
       'uk' => 'Ukrainian',
       'vi' => 'Vietnamese',
-      _ => code.toUpperCase(),
+      _ => normalized.toUpperCase(),
     };
   }
 }

@@ -12,8 +12,25 @@ class ModelManifest {
 
   /// Get all models for a specific language.
   List<ModelInfo> getModelsForLanguage(String languageCode) {
-    final code = languageCode.toLowerCase();
-    return models.where((m) => m.languages.contains(code)).toList();
+    final codes = _matchingLanguageCodes(languageCode);
+    return models
+        .where(
+          (m) => m.languages.any(
+            (lang) => codes.contains(lang.trim().toLowerCase()),
+          ),
+        )
+        .toList();
+  }
+
+  Set<String> _matchingLanguageCodes(String languageCode) {
+    final normalized = languageCode.trim().toLowerCase();
+    return switch (normalized) {
+      'zh' || 'zh-cn' || 'zh-sg' || 'zh-hans' => {'zh'},
+      // Allow Traditional Chinese to match either explicit or generic Chinese
+      // model labels for backwards compatibility with older manifests.
+      'zh-hant' || 'zh-tw' || 'zh-hk' || 'zh-mo' => {'zh-hant', 'zh'},
+      _ => {normalized},
+    };
   }
 
   /// Get a specific model by ID.
@@ -66,6 +83,7 @@ class ModelManifest {
         'languages': [
           'ar',
           'zh',
+          'zh-hant',
           'cs',
           'nl',
           'en',
@@ -103,6 +121,7 @@ class ModelManifest {
         'languages': [
           'ar',
           'zh',
+          'zh-hant',
           'cs',
           'nl',
           'en',

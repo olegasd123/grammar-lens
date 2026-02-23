@@ -74,7 +74,10 @@ class EditorBloc extends Bloc<EditorEvent, EditorState> {
       return;
     }
 
-    emit(state.copyWith(status: AnalysisStatus.analyzing));
+    emit(state.copyWith(
+      status: AnalysisStatus.analyzing,
+      clearRawModelOutput: true,
+    ));
 
     try {
       final language = state.selectedLanguage != null
@@ -92,12 +95,14 @@ class EditorBloc extends Bloc<EditorEvent, EditorState> {
           status: AnalysisStatus.complete,
           corrections: result.corrections,
           detectedLanguage: result.language.code,
+          rawModelOutput: result.rawModelOutput,
         ));
       }
     } catch (e) {
       emit(state.copyWith(
         status: AnalysisStatus.error,
         errorMessage: e.toString(),
+        clearRawModelOutput: true,
       ));
     }
   }
@@ -106,7 +111,11 @@ class EditorBloc extends Bloc<EditorEvent, EditorState> {
     LanguageChanged event,
     Emitter<EditorState> emit,
   ) {
-    emit(state.copyWith(selectedLanguage: event.languageCode));
+    if (event.languageCode == 'auto') {
+      emit(state.copyWith(clearSelectedLanguage: true));
+    } else {
+      emit(state.copyWith(selectedLanguage: event.languageCode));
+    }
 
     // Re-analyze with the new language
     if (state.text.trim().isNotEmpty) {

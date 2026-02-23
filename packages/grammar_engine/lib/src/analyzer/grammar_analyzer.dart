@@ -40,13 +40,38 @@ class GrammarAnalyzer {
   /// Minimum confidence threshold. Corrections below this are filtered out.
   final double confidenceThreshold;
 
+  /// Prompt format used to serialize model instructions.
+  final PromptFormat promptFormat;
+
   final LanguageDetector _languageDetector;
   final TextStatisticsCalculator _statisticsCalculator;
+  static const _placeholderOriginalTexts = {
+    'erroneous text span',
+    'texto erróneo',
+    'texte erroné',
+    'fehlerhafter text',
+    'texto com erro',
+  };
+  static const _placeholderCorrectedTexts = {
+    'fixed text span',
+    'texto corregido',
+    'texte corrigé',
+    'korrigierter text',
+    'texto corrigido',
+  };
+  static const _placeholderExplanations = {
+    'brief explanation of the error',
+    'breve explicación del error',
+    "brève explication de l'erreur",
+    'kurze erklärung des fehlers',
+    'breve explicação do erro',
+  };
 
   GrammarAnalyzer({
     required this.onInfer,
     this.sentencesPerBatch = 3,
     this.confidenceThreshold = 0.5,
+    this.promptFormat = PromptFormat.phi3Chat,
     LanguageDetector? languageDetector,
     TextStatisticsCalculator? statisticsCalculator,
   })  : _languageDetector = languageDetector ?? const LanguageDetector(),
@@ -68,8 +93,7 @@ class GrammarAnalyzer {
     final stopwatch = Stopwatch()..start();
 
     // Step 1: Detect language (if not specified)
-    final detectedLanguage =
-        language ?? _languageDetector.detect(text);
+    final detectedLanguage = language ?? _languageDetector.detect(text);
 
     // Step 2: Split into sentences
     final sentences = SentenceSplitter.split(text);
@@ -79,16 +103,22 @@ class GrammarAnalyzer {
 
     // Step 3: Process in batches
     final allCorrections = <Correction>[];
+    final rawOutputs = <String>[];
 
     for (var i = 0; i < sentences.length; i += sentencesPerBatch) {
       final end = (i + sentencesPerBatch).clamp(0, sentences.length);
       final batch = sentences.sublist(i, end);
 
       // Build prompt for this batch
-      final prompt = PromptBuilder.build(batch, detectedLanguage);
+      final prompt = PromptBuilder.build(
+        batch,
+        detectedLanguage,
+        format: promptFormat,
+      );
 
       // Run inference
       final rawOutput = await onInfer(prompt);
+      rawOutputs.add(rawOutput);
 
       // Parse corrections
       final corrections = CorrectionParser.parse(
@@ -99,7 +129,11 @@ class GrammarAnalyzer {
 
       // Filter by confidence
       allCorrections.addAll(
-        corrections.where((c) => c.confidence >= confidenceThreshold),
+        corrections.where(
+          (c) =>
+              c.confidence >= confidenceThreshold &&
+              _isValidCorrection(c, batch),
+        ),
       );
     }
 
@@ -113,6 +147,7 @@ class GrammarAnalyzer {
       language: detectedLanguage,
       statistics: statistics,
       analysisTimeMs: stopwatch.elapsedMilliseconds,
+      rawModelOutput: rawOutputs.join('\n\n----- BATCH -----\n\n'),
     );
   }
 
@@ -131,13 +166,47 @@ class GrammarAnalyzer {
       endOffset: offsetInDocument + sentence.length,
     );
 
-    final prompt = PromptBuilder.build([span], language);
+    final prompt = PromptBuilder.build(
+      [span],
+      language,
+      format: promptFormat,
+    );
     final rawOutput = await onInfer(prompt);
 
     return CorrectionParser.parse(
       rawOutput,
       [span],
       baseOffset: offsetInDocument,
-    );
+    ).where((c) => _isValidCorrection(c, [span])).toList();
+  }
+
+  bool _isValidCorrection(
+    Correction correction,
+    List<SentenceSpan> sentences,
+  ) {
+    if (!correction.hasChange) {
+      return false;
+    }
+
+    final original = correction.originalText.trim();
+    final corrected = correction.correctedText.trim();
+    final explanation = correction.explanation.trim();
+
+    if (original.isEmpty || corrected.isEmpty) {
+      return false;
+    }
+
+    final originalLower = original.toLowerCase();
+    final correctedLower = corrected.toLowerCase();
+    final explanationLower = explanation.toLowerCase();
+
+    if (_placeholderOriginalTexts.contains(originalLower) ||
+        _placeholderCorrectedTexts.contains(correctedLower) ||
+        _placeholderExplanations.contains(explanationLower)) {
+      return false;
+    }
+
+    final sourceText = sentences.map((s) => s.text).join('\n').toLowerCase();
+    return sourceText.contains(originalLower);
   }
 }
