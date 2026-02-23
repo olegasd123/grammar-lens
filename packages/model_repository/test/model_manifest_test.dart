@@ -145,28 +145,29 @@ void main() {
         expect(
           ids,
           containsAll([
-            'phi-3-mini-4k-instruct-q5_k_m',
             'phi-3-mini-4k-grammar-correction.Q2_K',
             'phi-3-mini-4k-grammar-correction.Q4_K_M',
+            'Mistral-7B-UA-Grammar-GRPO.Q2_K',
+            'Mistral-7B-UA-Grammar-GRPO.Q4_K_M',
           ]),
         );
-        expect(ids, hasLength(3));
+        expect(ids, hasLength(4));
       });
 
-      test('bundled models currently target English', () {
+      test('bundled models currently target English and Ukrainian', () {
         final bundled =
             ModelManifest.fromJson(ModelManifest.bundledManifestJson);
         final languages = bundled.models.expand((m) => m.languages).toSet();
-        expect(languages, {'en'});
+        expect(languages, {'en', 'uk'});
       });
 
-      test('English includes Q2_K, Q4_K_M, and Q5_K_M quantization levels', () {
+      test('English includes Q2_K and Q4_K_M quantization levels', () {
         final bundled =
             ModelManifest.fromJson(ModelManifest.bundledManifestJson);
         final enModels = bundled.getModelsForLanguage('en');
         expect(
           enModels.map((m) => m.quantization).toSet(),
-          containsAll(['Q2_K', 'Q4_K_M', 'Q5_K_M']),
+          containsAll(['Q2_K', 'Q4_K_M']),
         );
       });
     });

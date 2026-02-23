@@ -8,7 +8,9 @@ final _log = Logger('ModelStorage');
 
 /// Manages filesystem storage for downloaded GGUF models.
 class ModelStorage {
-  static const _modelsDirName = 'grammarlens_models';
+  static const _modelsDirName = 'GrammarLens_models';
+  static const _legacyModelsDirNames = ['grammarlens_models'];
+  static const _legacyBundleDirectoryNames = ['com.example.grammarlens'];
 
   const ModelStorage();
 
@@ -19,12 +21,60 @@ class ModelStorage {
     final appDir = await getApplicationSupportDirectory();
     final modelsDir = Directory(p.join(appDir.path, _modelsDirName));
 
-    if (!modelsDir.existsSync()) {
+    if (modelsDir.existsSync()) {
+      return modelsDir;
+    }
+
+    final migrated = await _migrateLegacyModelsDirectory(
+      appDir: appDir,
+      modelsDir: modelsDir,
+    );
+    if (!migrated) {
       await modelsDir.create(recursive: true);
       _log.info('Created models directory: ${modelsDir.path}');
     }
 
     return modelsDir;
+  }
+
+  Future<bool> _migrateLegacyModelsDirectory({
+    required Directory appDir,
+    required Directory modelsDir,
+  }) async {
+    final appSupportDir = Directory(p.dirname(appDir.path));
+    final candidates = <Directory>[
+      for (final legacyDirName in _legacyModelsDirNames)
+        Directory(p.join(appDir.path, legacyDirName)),
+      for (final legacyBundleDirName in _legacyBundleDirectoryNames)
+        for (final legacyDirName in _legacyModelsDirNames)
+          Directory(
+            p.join(appSupportDir.path, legacyBundleDirName, legacyDirName),
+          ),
+    ];
+
+    for (final candidate in candidates) {
+      if (!candidate.existsSync()) continue;
+      if (p.equals(candidate.path, modelsDir.path)) return true;
+
+      try {
+        await appDir.create(recursive: true);
+        await candidate.rename(modelsDir.path);
+        _log.info(
+          'Migrated models directory from ${candidate.path} to '
+          '${modelsDir.path}',
+        );
+        return true;
+      } catch (error, stackTrace) {
+        _log.warning(
+          'Failed to migrate models directory from ${candidate.path} to '
+          '${modelsDir.path}',
+          error,
+          stackTrace,
+        );
+      }
+    }
+
+    return false;
   }
 
   /// Get the expected file path for a model.

@@ -74,7 +74,7 @@ void main() {
     });
 
     group('ModelStatusChecked', () {
-      const installedBundledModelId = 'phi-3-mini-4k-instruct-q5_k_m';
+      const installedBundledModelId = 'phi-3-mini-4k-grammar-correction.Q4_K_M';
 
       blocTest<ModelBloc, ModelState>(
         'loads manifest and checks installed models',
