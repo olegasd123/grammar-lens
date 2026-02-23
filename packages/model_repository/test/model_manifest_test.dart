@@ -119,37 +119,64 @@ void main() {
         expect(bundled.version, 1);
       });
 
-      test('contains all canonical grammar model IDs', () {
+      test('contains expected bundled model IDs', () {
         final bundled =
             ModelManifest.fromJson(ModelManifest.bundledManifestJson);
         final ids = bundled.models.map((m) => m.id).toSet();
         expect(
           ids,
           containsAll([
-            'phi3-mini-grammar-en-q4km',
-            'phi3-mini-grammar-en-q5km',
-            'phi3-mini-grammar-es-q4km',
-            'phi3-mini-grammar-fr-q4km',
-            'phi3-mini-grammar-de-q4km',
-            'phi3-mini-grammar-pt-q4km',
+            'phi-3-mini-4k-instruct-q5_k_m',
+            'aya-23-8B.Q2_K',
+            'aya-23-8B.Q4_K_M',
+            'phi-3-mini-4k-grammar-correction.Q2_K',
+            'phi-3-mini-4k-grammar-correction.Q4_K_M',
           ]),
         );
+        expect(ids, hasLength(5));
       });
 
       test('covers all supported languages', () {
         final bundled =
             ModelManifest.fromJson(ModelManifest.bundledManifestJson);
         final languages = bundled.models.expand((m) => m.languages).toSet();
-        expect(languages, containsAll(['en', 'es', 'fr', 'de', 'pt']));
+        expect(
+          languages,
+          containsAll([
+            'ar',
+            'zh',
+            'cs',
+            'nl',
+            'en',
+            'fr',
+            'de',
+            'el',
+            'he',
+            'hi',
+            'id',
+            'it',
+            'ja',
+            'ko',
+            'fa',
+            'pl',
+            'pt',
+            'ro',
+            'ru',
+            'es',
+            'tr',
+            'uk',
+            'vi',
+          ]),
+        );
       });
 
-      test('English includes Q4_K_M and Q5_K_M quantization levels', () {
+      test('English includes Q2_K, Q4_K_M, and Q5_K_M quantization levels', () {
         final bundled =
             ModelManifest.fromJson(ModelManifest.bundledManifestJson);
         final enModels = bundled.getModelsForLanguage('en');
         expect(
           enModels.map((m) => m.quantization).toSet(),
-          containsAll(['Q4_K_M', 'Q5_K_M']),
+          containsAll(['Q2_K', 'Q4_K_M', 'Q5_K_M']),
         );
       });
     });

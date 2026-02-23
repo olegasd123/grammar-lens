@@ -86,14 +86,14 @@ class ModelManifest {
           'es',
           'tr',
           'uk',
-          'vi'
+          'vi',
         ],
         'quantization': 'Q2_K',
         'fileSizeBytes': 3438504832,
         'sha256':
             'a36462c4c01335288758c91fb5d9530c91a767240f8784094df4920a263fbfc6',
         'downloadUrl':
-            'https://huggingface.co/QuantFactory/aya-23-8B-GGUF/blob/main/aya-23-8B.Q2_K.gguf',
+            'https://huggingface.co/QuantFactory/aya-23-8B-GGUF/resolve/main/aya-23-8B.Q2_K.gguf',
         'minAppVersion': '0.1.0',
         'contextLength': 4096,
       },
@@ -123,14 +123,14 @@ class ModelManifest {
           'es',
           'tr',
           'uk',
-          'vi'
+          'vi',
         ],
         'quantization': 'Q4_K_M',
         'fileSizeBytes': 5056981888,
         'sha256':
             'e3bdf877d47c45a675e6e689226f376a78d5d055b12c394ce0858a2ebca3c1e0',
         'downloadUrl':
-            'https://huggingface.co/QuantFactory/aya-23-8B-GGUF/blob/main/aya-23-8B.Q4_K_M.gguf',
+            'https://huggingface.co/QuantFactory/aya-23-8B-GGUF/resolve/main/aya-23-8B.Q4_K_M.gguf',
         'minAppVersion': '0.1.0',
         'contextLength': 4096,
       },
@@ -143,7 +143,7 @@ class ModelManifest {
         'sha256':
             '2ee82a1ad7f53ae8583aa465b63e4aa245572843ad195e63c037a03832dda5c4',
         'downloadUrl':
-            'https://huggingface.co/afrideva/Phi-3-mini-4k-grammar-correction-GGUF/blob/main/phi-3-mini-4k-grammar-correction.Q2_K.gguf',
+            'https://huggingface.co/afrideva/Phi-3-mini-4k-grammar-correction-GGUF/resolve/main/phi-3-mini-4k-grammar-correction.Q2_K.gguf',
         'minAppVersion': '0.1.0',
         'contextLength': 4096,
       },
@@ -156,7 +156,7 @@ class ModelManifest {
         'sha256':
             'da14a00718821f0510cb63c3c184dde97f05d4063abce0ad9e2c86bdfae93bf3',
         'downloadUrl':
-            'https://huggingface.co/afrideva/Phi-3-mini-4k-grammar-correction-GGUF/blob/main/phi-3-mini-4k-grammar-correction.Q4_K_M.gguf',
+            'https://huggingface.co/afrideva/Phi-3-mini-4k-grammar-correction-GGUF/resolve/main/phi-3-mini-4k-grammar-correction.Q4_K_M.gguf',
         'minAppVersion': '0.1.0',
         'contextLength': 4096,
       },

@@ -150,11 +150,32 @@ class ModelManagerPage extends StatelessWidget {
 
   String _languageName(String code) {
     return switch (code) {
+      'ar' => 'Arabic',
+      'zh' => 'Chinese (Simplified)',
+      'zh-Hans' => 'Chinese (Simplified)',
+      'zh-Hant' => 'Chinese (Traditional)',
+      'zh-TW' => 'Chinese (Traditional)',
+      'cs' => 'Czech',
+      'nl' => 'Dutch',
       'en' => 'English',
-      'es' => 'Spanish',
       'fr' => 'French',
       'de' => 'German',
+      'el' => 'Greek',
+      'he' => 'Hebrew',
+      'hi' => 'Hindi',
+      'id' => 'Indonesian',
+      'it' => 'Italian',
+      'ja' => 'Japanese',
+      'ko' => 'Korean',
+      'fa' => 'Persian',
+      'pl' => 'Polish',
       'pt' => 'Portuguese',
+      'ro' => 'Romanian',
+      'ru' => 'Russian',
+      'es' => 'Spanish',
+      'tr' => 'Turkish',
+      'uk' => 'Ukrainian',
+      'vi' => 'Vietnamese',
       _ => code.toUpperCase(),
     };
   }

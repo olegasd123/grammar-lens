@@ -86,14 +86,10 @@ class ModelDownloadTile extends StatelessWidget {
                   ),
                 ),
                 if (isActive)
-                  Container(
+                  Padding(
                     padding: const EdgeInsets.symmetric(
                       horizontal: 8,
                       vertical: 4,
-                    ),
-                    decoration: BoxDecoration(
-                      color: AppColors.successGreenLight,
-                      borderRadius: BorderRadius.circular(4),
                     ),
                     child: Text(
                       'Active',

@@ -74,6 +74,8 @@ void main() {
     });
 
     group('ModelStatusChecked', () {
+      const installedBundledModelId = 'phi-3-mini-4k-instruct-q5_k_m';
+
       blocTest<ModelBloc, ModelState>(
         'loads manifest and checks installed models',
         setUp: () {
@@ -104,12 +106,12 @@ void main() {
       blocTest<ModelBloc, ModelState>(
         'detects installed models',
         setUp: () {
-          when(() => mockStorage.isModelDownloaded('phi3-mini-grammar-en-q4km'))
+          when(() => mockStorage.isModelDownloaded(installedBundledModelId))
               .thenAnswer((_) async => true);
           when(() => mockStorage.isModelDownloaded(any()))
               .thenAnswer((_) async => false);
           // Override specific model
-          when(() => mockStorage.isModelDownloaded('phi3-mini-grammar-en-q4km'))
+          when(() => mockStorage.isModelDownloaded(installedBundledModelId))
               .thenAnswer((_) async => true);
           when(() => mockRegistry.getActiveModel(any()))
               .thenAnswer((_) async => null);
@@ -126,7 +128,7 @@ void main() {
         verify: (bloc) {
           expect(
             bloc.state.installedModelIds,
-            contains('phi3-mini-grammar-en-q4km'),
+            contains(installedBundledModelId),
           );
         },
       );
