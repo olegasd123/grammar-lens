@@ -2,17 +2,6 @@
   "version": 1,
   "models": [
     {
-      "id": "phi-3-mini-4k-instruct-q5_k_m",
-      "displayName": "English Grammar (Standard Quality)",
-      "languages": ["en"],
-      "quantization": "Q5_K_M",
-      "fileSizeBytes": 2815274944,
-      "sha256": "589fe69682475914b9d61beaa37876a49ac9f28f552363d28ab44dab67f7315b",
-      "downloadUrl": "https://huggingface.co/Marlon81/Phi-3-mini-4k-instruct-Q5_K_M-GGUF/resolve/main/phi-3-mini-4k-instruct-q5_k_m.gguf",
-      "minAppVersion": "0.1.0",
-      "contextLength": 4096
-    },
-    {
       "id": "phi-3-mini-4k-grammar-correction.Q2_K",
       "displayName": "English Grammar (Lower Quality)",
       "languages": ["en"],
@@ -31,6 +20,28 @@
       "fileSizeBytes": 2393231072,
       "sha256": "da14a00718821f0510cb63c3c184dde97f05d4063abce0ad9e2c86bdfae93bf3",
       "downloadUrl": "https://huggingface.co/afrideva/Phi-3-mini-4k-grammar-correction-GGUF/resolve/main/phi-3-mini-4k-grammar-correction.Q4_K_M.gguf",
+      "minAppVersion": "0.1.0",
+      "contextLength": 4096
+    },
+    {
+      "id": "Mistral-7B-UA-Grammar-GRPO.Q2_K",
+      "displayName": "Ukrainian Grammar (Lower Quality)",
+      "languages": ["uk"],
+      "quantization": "Q2_K",
+      "fileSizeBytes": 2720000000,
+      "sha256": "06ee25c8e4dcb5387abcf2d2f032aa8a0ee04f6462a14eaa7959e36650843b6f",
+      "downloadUrl": "https://huggingface.co/mradermacher/Mistral-7B-UA-Grammar-GRPO-GGUF/resolve/main/Mistral-7B-UA-Grammar-GRPO.Q2_K.gguf",
+      "minAppVersion": "0.1.0",
+      "contextLength": 4096
+    },
+    {
+      "id": "Mistral-7B-UA-Grammar-GRPO.Q4_K_M",
+      "displayName": "Ukrainian Grammar (Standard Quality)",
+      "languages": ["uk"],
+      "quantization": "Q4_K_M",
+      "fileSizeBytes": 4370000000,
+      "sha256": "23e86b08d3ae26e6aa270891bb1ba4000c98320cac4c8cc0a6ad47959a4d59bf",
+      "downloadUrl": "https://huggingface.co/mradermacher/Mistral-7B-UA-Grammar-GRPO-GGUF/resolve/main/Mistral-7B-UA-Grammar-GRPO.Q4_K_M.gguf",
       "minAppVersion": "0.1.0",
       "contextLength": 4096
     }
