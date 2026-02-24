@@ -158,5 +158,27 @@ void main() {
 
       expect(result.rawModelOutput, contains(raw));
     });
+
+    test('analyze includes request parameters in debug output', () async {
+      const raw = '<corrections></corrections>';
+      final analyzer = GrammarAnalyzer(
+        debugRequestMetadata: () => {
+          'temperature': 0.15,
+          'top_p': 0.9,
+          'repeat_penalty': 1.1,
+        },
+        onInfer: (_) async => raw,
+      );
+
+      final result = await analyzer.analyze(
+        'Hello world',
+        language: SupportedLanguage.english,
+      );
+
+      expect(result.rawModelOutput, contains('=== REQUEST PARAMETERS ==='));
+      expect(result.rawModelOutput, contains('"temperature": 0.15'));
+      expect(result.rawModelOutput, contains('"top_p": 0.9'));
+      expect(result.rawModelOutput, contains('"repeat_penalty": 1.1'));
+    });
   });
 }

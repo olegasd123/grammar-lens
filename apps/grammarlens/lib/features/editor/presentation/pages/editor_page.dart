@@ -107,20 +107,42 @@ class _EditorPageState extends State<EditorPage> {
   GrammarAnalyzer _buildAnalyzer(IsolateInference engine) {
     return GrammarAnalyzer(
       promptFormat: PromptFormat.phi3Chat,
+      debugRequestMetadata: () => _inferenceConfigToDebugMap(
+        _buildInferenceConfig(),
+      ),
       onInfer: (prompt) async {
-        final temperature = getIt<SettingsBloc>()
-            .state
-            .preferences
-            .aiTemperature
-            .clamp(0.0, 1.0)
-            .toDouble();
-        final config = const InferenceConfig.grammar().copyWith(
-          temperature: temperature,
-        );
+        final config = _buildInferenceConfig();
         final result = await engine.complete(prompt, config: config);
         return result.text;
       },
     );
+  }
+
+  InferenceConfig _buildInferenceConfig() {
+    final temperature = getIt<SettingsBloc>()
+        .state
+        .preferences
+        .aiTemperature
+        .clamp(0.0, 1.0)
+        .toDouble();
+    return const InferenceConfig.grammar().copyWith(
+      temperature: temperature,
+    );
+  }
+
+  Map<String, Object?> _inferenceConfigToDebugMap(InferenceConfig config) {
+    return {
+      'max_tokens': config.maxTokens,
+      'temperature': config.temperature,
+      'top_p': config.topP,
+      'top_k': config.topK,
+      'repeat_penalty': config.repeatPenalty,
+      'stop_tokens': config.stopTokens,
+      'grammar_gbnf': config.grammarGbnf,
+      'seed': config.seed,
+      'threads': config.threads,
+      'batch_size': config.batchSize,
+    };
   }
 
   void _syncControllerText(String newText) {

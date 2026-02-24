@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:grammar_engine/src/analyzer/correction_parser.dart';
 import 'package:grammar_engine/src/analyzer/prompt_builder.dart';
 import 'package:grammar_engine/src/analyzer/sentence_splitter.dart';
@@ -12,6 +14,11 @@ import 'package:grammar_engine/src/statistics/text_statistics.dart';
 /// Takes a prompt string and returns the model's completion.
 /// This abstraction allows the analyzer to be tested with mock inference.
 typedef InferenceCallback = Future<String> Function(String prompt);
+
+/// Callback that returns request parameters for debug tracing.
+///
+/// Values should be simple JSON-friendly types.
+typedef DebugRequestMetadataCallback = Map<String, Object?> Function();
 
 /// Main grammar analysis pipeline.
 ///
@@ -32,6 +39,9 @@ typedef InferenceCallback = Future<String> Function(String prompt);
 class GrammarAnalyzer {
   /// Callback to run model inference.
   final InferenceCallback onInfer;
+
+  /// Optional callback to capture request parameters for debug output.
+  final DebugRequestMetadataCallback? debugRequestMetadata;
 
   /// Number of sentences to process per inference call.
   /// More sentences = fewer API calls but larger context.
@@ -69,6 +79,7 @@ class GrammarAnalyzer {
 
   GrammarAnalyzer({
     required this.onInfer,
+    this.debugRequestMetadata,
     this.sentencesPerBatch = 3,
     this.confidenceThreshold = 0.5,
     this.promptFormat = PromptFormat.phi3Chat,
@@ -117,11 +128,13 @@ class GrammarAnalyzer {
       );
 
       // Run inference
+      final requestMetadata = _readDebugRequestMetadata();
       final rawOutput = await onInfer(prompt);
       debugBatches.add(
         _buildDebugBatchTrace(
           batchIndex: (i ~/ sentencesPerBatch) + 1,
           prompt: prompt,
+          requestMetadata: requestMetadata,
           response: rawOutput,
         ),
       );
@@ -219,12 +232,54 @@ class GrammarAnalyzer {
   String _buildDebugBatchTrace({
     required int batchIndex,
     required String prompt,
+    Map<String, Object?>? requestMetadata,
     required String response,
   }) {
+    final requestMetadataSection = requestMetadata == null
+        ? ''
+        : '=== REQUEST PARAMETERS ===\n'
+            '${_formatDebugMetadata(requestMetadata)}\n';
     return 'Batch $batchIndex\n'
         '=== REQUEST (prompt sent to model) ===\n'
         '$prompt\n'
+        '$requestMetadataSection'
         '=== RESPONSE (model output) ===\n'
         '$response';
+  }
+
+  Map<String, Object?>? _readDebugRequestMetadata() {
+    final callback = debugRequestMetadata;
+    if (callback == null) {
+      return null;
+    }
+    try {
+      return callback();
+    } catch (error) {
+      return {'debug_metadata_error': error.toString()};
+    }
+  }
+
+  String _formatDebugMetadata(Map<String, Object?> metadata) {
+    final keys = metadata.keys.toList()..sort();
+    final normalized = <String, Object?>{
+      for (final key in keys) key: _normalizeDebugValue(metadata[key]),
+    };
+    return const JsonEncoder.withIndent('  ').convert(normalized);
+  }
+
+  Object? _normalizeDebugValue(Object? value) {
+    if (value == null || value is String || value is num || value is bool) {
+      return value;
+    }
+    if (value is List) {
+      return value.map(_normalizeDebugValue).toList();
+    }
+    if (value is Map) {
+      final keys = value.keys.map((k) => k.toString()).toList()..sort();
+      return <String, Object?>{
+        for (final key in keys) key: _normalizeDebugValue(value[key]),
+      };
+    }
+    return value.toString();
   }
 }
