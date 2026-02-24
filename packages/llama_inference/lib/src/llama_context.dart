@@ -124,7 +124,9 @@ class LlamaContext {
     calloc.free(tokenBuf);
 
     if (decodeResult != 0) {
-      throw LlamaContextException('Prompt decode failed (code: $decodeResult)');
+      throw LlamaContextException(
+        _decodeErrorMessage(decodeResult, stage: 'prompt'),
+      );
     }
 
     // 3. Create sampler
@@ -177,7 +179,13 @@ class LlamaContext {
         // Decode the new token for next iteration
         final rc = _b.decodeSingle(_nativeContext!, tokenId, pos);
         if (rc != 0) {
-          throw LlamaContextException('Decode failed at pos $pos (code: $rc)');
+          throw LlamaContextException(
+            _decodeErrorMessage(
+              rc,
+              stage: 'generation',
+              position: pos,
+            ),
+          );
         }
         pos++;
       }
@@ -237,7 +245,9 @@ class LlamaContext {
     calloc.free(tokenBuf);
 
     if (decodeResult != 0) {
-      throw LlamaContextException('Prompt decode failed (code: $decodeResult)');
+      throw LlamaContextException(
+        _decodeErrorMessage(decodeResult, stage: 'prompt'),
+      );
     }
 
     // 3. Create sampler
@@ -321,7 +331,13 @@ class LlamaContext {
 
         final rc = _b.decodeSingle(_nativeContext!, tokenId, pos);
         if (rc != 0) {
-          throw LlamaContextException('Decode failed at pos $pos (code: $rc)');
+          throw LlamaContextException(
+            _decodeErrorMessage(
+              rc,
+              stage: 'generation',
+              position: pos,
+            ),
+          );
         }
         pos++;
       }
@@ -442,6 +458,21 @@ class LlamaContext {
     }
     if (earliestIndex == -1) return null;
     return text.substring(0, earliestIndex + matchedStop.length);
+  }
+
+  String _decodeErrorMessage(
+    int code, {
+    required String stage,
+    int? position,
+  }) {
+    if (code == -2) {
+      final where = position == null ? '' : ' at position $position';
+      return 'Decode failed during $stage$where: '
+          'context window exceeded (max $contextSize tokens).';
+    }
+
+    final where = position == null ? '' : ' at pos $position';
+    return 'Decode failed during $stage$where (code: $code)';
   }
 }
 

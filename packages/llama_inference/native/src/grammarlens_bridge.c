@@ -163,20 +163,53 @@ GL_API int32_t gl_decode_batch(
     int32_t        n_tokens,
     int32_t        pos_start
 ) {
-    struct llama_batch batch = llama_batch_init(n_tokens, 0, 1);
-
-    for (int32_t i = 0; i < n_tokens; i++) {
-        batch.token[i]    = tokens[i];
-        batch.pos[i]      = pos_start + i;
-        batch.n_seq_id[i] = 1;
-        batch.seq_id[i][0] = 0;
-        batch.logits[i]   = (i == n_tokens - 1) ? 1 : 0; // logits for last token only
+    if (ctx == NULL || tokens == NULL || n_tokens <= 0 || pos_start < 0) {
+        return -1;
     }
-    batch.n_tokens = n_tokens;
 
-    int32_t result = llama_decode((struct llama_context*)ctx, batch);
-    llama_batch_free(batch);
-    return result;
+    struct llama_context* context = (struct llama_context*)ctx;
+    const uint32_t n_ctx = llama_n_ctx(context);
+    const uint32_t n_batch = llama_n_batch(context);
+    if (n_batch == 0) {
+        return -1;
+    }
+
+    const int64_t end_pos = (int64_t)pos_start + (int64_t)n_tokens;
+    if (end_pos > (int64_t)n_ctx) {
+        // Requested decode would exceed KV-cache capacity.
+        return -2;
+    }
+
+    int32_t consumed = 0;
+    while (consumed < n_tokens) {
+        int32_t chunk = n_tokens - consumed;
+        if ((uint32_t)chunk > n_batch) {
+            chunk = (int32_t)n_batch;
+        }
+
+        struct llama_batch batch = llama_batch_init(chunk, 0, 1);
+
+        for (int32_t i = 0; i < chunk; i++) {
+            const int32_t token_index = consumed + i;
+            batch.token[i]     = tokens[token_index];
+            batch.pos[i]       = pos_start + token_index;
+            batch.n_seq_id[i]  = 1;
+            batch.seq_id[i][0] = 0;
+            // Keep logits only for the last token of the whole prompt.
+            batch.logits[i]    = (token_index == n_tokens - 1) ? 1 : 0;
+        }
+        batch.n_tokens = chunk;
+
+        const int32_t result = llama_decode(context, batch);
+        llama_batch_free(batch);
+        if (result != 0) {
+            return result;
+        }
+
+        consumed += chunk;
+    }
+
+    return 0;
 }
 
 GL_API int32_t gl_decode_single(
@@ -184,6 +217,17 @@ GL_API int32_t gl_decode_single(
     int32_t      token,
     int32_t      pos
 ) {
+    if (ctx == NULL || pos < 0) {
+        return -1;
+    }
+
+    struct llama_context* context = (struct llama_context*)ctx;
+    const uint32_t n_ctx = llama_n_ctx(context);
+    if ((uint32_t)pos >= n_ctx) {
+        // Token position would exceed KV-cache capacity.
+        return -2;
+    }
+
     struct llama_batch batch = llama_batch_init(1, 0, 1);
 
     batch.token[0]     = token;
@@ -193,7 +237,7 @@ GL_API int32_t gl_decode_single(
     batch.logits[0]    = 1;
     batch.n_tokens     = 1;
 
-    int32_t result = llama_decode((struct llama_context*)ctx, batch);
+    int32_t result = llama_decode(context, batch);
     llama_batch_free(batch);
     return result;
 }
