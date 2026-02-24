@@ -119,14 +119,16 @@ class _EditorPageState extends State<EditorPage> {
   }
 
   InferenceConfig _buildInferenceConfig() {
-    final temperature = getIt<SettingsBloc>()
-        .state
-        .preferences
-        .aiTemperature
-        .clamp(0.0, 1.0)
-        .toDouble();
+    final prefs = getIt<SettingsBloc>().state.preferences;
+    final temperature = prefs.aiTemperature.clamp(0.0, 1.0).toDouble();
+    final topP = prefs.aiTopP.clamp(0.0, 1.0).toDouble();
+    final topK = prefs.aiTopK.clamp(0, 200);
+    final repeatPenalty = prefs.aiRepeatPenalty.clamp(1.0, 2.0).toDouble();
     return const InferenceConfig.grammar().copyWith(
       temperature: temperature,
+      topP: topP,
+      topK: topK,
+      repeatPenalty: repeatPenalty,
     );
   }
 

@@ -10,6 +10,9 @@ abstract final class _Keys {
   static const autoCheck = 'pref_auto_check';
   static const editorFontScale = 'pref_editor_font_scale';
   static const aiTemperature = 'pref_ai_temperature';
+  static const aiTopP = 'pref_ai_top_p';
+  static const aiTopK = 'pref_ai_top_k';
+  static const aiRepeatPenalty = 'pref_ai_repeat_penalty';
   static const showDebugMenu = 'pref_show_debug_menu';
 }
 
@@ -35,6 +38,11 @@ class PreferencesRepository {
     final aiTemperature = _normalizeTemperature(
       prefs.getDouble(_Keys.aiTemperature),
     );
+    final aiTopP = _normalizeTopP(prefs.getDouble(_Keys.aiTopP));
+    final aiTopK = _normalizeTopK(prefs.getInt(_Keys.aiTopK));
+    final aiRepeatPenalty = _normalizeRepeatPenalty(
+      prefs.getDouble(_Keys.aiRepeatPenalty),
+    );
 
     return AppPreferences(
       themeMode: themeMode,
@@ -42,6 +50,9 @@ class PreferencesRepository {
       autoCheck: prefs.getBool(_Keys.autoCheck) ?? true,
       editorFontScale: prefs.getDouble(_Keys.editorFontScale) ?? 1.0,
       aiTemperature: aiTemperature,
+      aiTopP: aiTopP,
+      aiTopK: aiTopK,
+      aiRepeatPenalty: aiRepeatPenalty,
       showDebugMenu: prefs.getBool(_Keys.showDebugMenu) ?? true,
     );
   }
@@ -79,6 +90,27 @@ class PreferencesRepository {
     );
   }
 
+  /// Persist AI top-p.
+  Future<void> saveAiTopP(double topP) async {
+    final prefs = await _ensurePrefs();
+    await prefs.setDouble(_Keys.aiTopP, _normalizeTopP(topP));
+  }
+
+  /// Persist AI top-k.
+  Future<void> saveAiTopK(int topK) async {
+    final prefs = await _ensurePrefs();
+    await prefs.setInt(_Keys.aiTopK, _normalizeTopK(topK));
+  }
+
+  /// Persist AI repeat penalty.
+  Future<void> saveAiRepeatPenalty(double repeatPenalty) async {
+    final prefs = await _ensurePrefs();
+    await prefs.setDouble(
+      _Keys.aiRepeatPenalty,
+      _normalizeRepeatPenalty(repeatPenalty),
+    );
+  }
+
   /// Persist visibility of the debug menu item.
   Future<void> saveShowDebugMenu({required bool enabled}) async {
     final prefs = await _ensurePrefs();
@@ -90,5 +122,26 @@ class PreferencesRepository {
       return 0.1;
     }
     return value.clamp(0.0, 1.0).toDouble();
+  }
+
+  double _normalizeTopP(double? value) {
+    if (value == null || value.isNaN || !value.isFinite) {
+      return 0.9;
+    }
+    return value.clamp(0.0, 1.0).toDouble();
+  }
+
+  int _normalizeTopK(int? value) {
+    if (value == null) {
+      return 40;
+    }
+    return value.clamp(0, 200);
+  }
+
+  double _normalizeRepeatPenalty(double? value) {
+    if (value == null || value.isNaN || !value.isFinite) {
+      return 1.1;
+    }
+    return value.clamp(1.0, 2.0).toDouble();
   }
 }

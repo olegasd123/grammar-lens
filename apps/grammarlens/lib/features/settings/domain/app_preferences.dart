@@ -17,6 +17,15 @@ class AppPreferences {
   /// Sampling temperature for AI requests.
   final double aiTemperature;
 
+  /// Nucleus sampling threshold for AI requests.
+  final double aiTopP;
+
+  /// Top-K sampling for AI requests. 0 = disabled.
+  final int aiTopK;
+
+  /// Repetition penalty for AI requests. 1.0 = disabled.
+  final double aiRepeatPenalty;
+
   /// Whether to show the debug output page in the top menu.
   final bool showDebugMenu;
 
@@ -26,6 +35,9 @@ class AppPreferences {
     this.autoCheck = true,
     this.editorFontScale = 1.0,
     this.aiTemperature = 0.1,
+    this.aiTopP = 0.9,
+    this.aiTopK = 40,
+    this.aiRepeatPenalty = 1.1,
     this.showDebugMenu = true,
   });
 
@@ -35,6 +47,9 @@ class AppPreferences {
     bool? autoCheck,
     double? editorFontScale,
     double? aiTemperature,
+    double? aiTopP,
+    int? aiTopK,
+    double? aiRepeatPenalty,
     bool? showDebugMenu,
   }) {
     return AppPreferences(
@@ -43,6 +58,9 @@ class AppPreferences {
       autoCheck: autoCheck ?? this.autoCheck,
       editorFontScale: editorFontScale ?? this.editorFontScale,
       aiTemperature: aiTemperature ?? this.aiTemperature,
+      aiTopP: aiTopP ?? this.aiTopP,
+      aiTopK: aiTopK ?? this.aiTopK,
+      aiRepeatPenalty: aiRepeatPenalty ?? this.aiRepeatPenalty,
       showDebugMenu: showDebugMenu ?? this.showDebugMenu,
     );
   }
@@ -57,6 +75,9 @@ class AppPreferences {
           autoCheck == other.autoCheck &&
           editorFontScale == other.editorFontScale &&
           aiTemperature == other.aiTemperature &&
+          aiTopP == other.aiTopP &&
+          aiTopK == other.aiTopK &&
+          aiRepeatPenalty == other.aiRepeatPenalty &&
           showDebugMenu == other.showDebugMenu;
 
   @override
@@ -66,6 +87,9 @@ class AppPreferences {
         autoCheck,
         editorFontScale,
         aiTemperature,
+        aiTopP,
+        aiTopK,
+        aiRepeatPenalty,
         showDebugMenu,
       );
 }

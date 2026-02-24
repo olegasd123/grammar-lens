@@ -10,7 +10,7 @@ import 'package:grammarlens/features/settings/presentation/bloc/settings_state.d
 /// Application settings page.
 ///
 /// Allows the user to configure theme, language, auto-check behaviour,
-/// editor font size, and AI temperature.
+/// editor font size, and AI sampling parameters.
 class SettingsPage extends StatelessWidget {
   const SettingsPage({super.key});
 
@@ -90,15 +90,6 @@ class SettingsPage extends StatelessWidget {
                       },
                     ),
                     const Divider(height: 1),
-                    _AiTemperatureTile(
-                      temperature: prefs.aiTemperature,
-                      onChanged: (value) {
-                        context.read<SettingsBloc>().add(
-                              AiTemperatureChanged(temperature: value),
-                            );
-                      },
-                    ),
-                    const Divider(height: 1),
                     SwitchListTile(
                       title: const Text('Show Debug Output in Menu'),
                       subtitle: const Text(
@@ -108,6 +99,53 @@ class SettingsPage extends StatelessWidget {
                       onChanged: (value) {
                         context.read<SettingsBloc>().add(
                               DebugMenuToggled(enabled: value),
+                            );
+                      },
+                    ),
+                  ],
+                ),
+              ),
+
+              const SizedBox(height: 24),
+
+              // ── AI Sampling ────────────────────────────────
+              Text('AI Sampling', style: AppTypography.headlineSmall),
+              const SizedBox(height: 12),
+              Card(
+                child: Column(
+                  children: [
+                    _AiTemperatureTile(
+                      temperature: prefs.aiTemperature,
+                      onChanged: (value) {
+                        context.read<SettingsBloc>().add(
+                              AiTemperatureChanged(temperature: value),
+                            );
+                      },
+                    ),
+                    const Divider(height: 1),
+                    _AiTopPTile(
+                      topP: prefs.aiTopP,
+                      onChanged: (value) {
+                        context.read<SettingsBloc>().add(
+                              AiTopPChanged(topP: value),
+                            );
+                      },
+                    ),
+                    const Divider(height: 1),
+                    _AiTopKTile(
+                      topK: prefs.aiTopK,
+                      onChanged: (value) {
+                        context.read<SettingsBloc>().add(
+                              AiTopKChanged(topK: value),
+                            );
+                      },
+                    ),
+                    const Divider(height: 1),
+                    _AiRepeatPenaltyTile(
+                      repeatPenalty: prefs.aiRepeatPenalty,
+                      onChanged: (value) {
+                        context.read<SettingsBloc>().add(
+                              AiRepeatPenaltyChanged(repeatPenalty: value),
                             );
                       },
                     ),
@@ -344,16 +382,130 @@ class _AiTemperatureTile extends StatelessWidget {
   Widget build(BuildContext context) {
     return ListTile(
       title: const Text('AI Temperature'),
-      subtitle: Slider(
-        value: temperature,
-        min: 0.0,
-        max: 1.0,
-        divisions: 20,
-        label: temperature.toStringAsFixed(2),
-        onChanged: onChanged,
+      subtitle: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text('Higher value gives more random suggestions.'),
+          Slider(
+            value: temperature,
+            min: 0.0,
+            max: 1.0,
+            divisions: 20,
+            label: temperature.toStringAsFixed(2),
+            onChanged: onChanged,
+          ),
+        ],
       ),
       trailing: Text(
         temperature.toStringAsFixed(2),
+        style: AppTypography.labelMedium,
+      ),
+    );
+  }
+}
+
+/// AI top-p slider tile.
+class _AiTopPTile extends StatelessWidget {
+  final double topP;
+  final ValueChanged<double> onChanged;
+
+  const _AiTopPTile({
+    required this.topP,
+    required this.onChanged,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return ListTile(
+      title: const Text('AI Top-p'),
+      subtitle: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text('Lower value keeps only safer token choices.'),
+          Slider(
+            value: topP,
+            min: 0.0,
+            max: 1.0,
+            divisions: 20,
+            label: topP.toStringAsFixed(2),
+            onChanged: onChanged,
+          ),
+        ],
+      ),
+      trailing: Text(
+        topP.toStringAsFixed(2),
+        style: AppTypography.labelMedium,
+      ),
+    );
+  }
+}
+
+/// AI top-k slider tile.
+class _AiTopKTile extends StatelessWidget {
+  final int topK;
+  final ValueChanged<int> onChanged;
+
+  const _AiTopKTile({
+    required this.topK,
+    required this.onChanged,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return ListTile(
+      title: const Text('AI Top-k'),
+      subtitle: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text('Lower value limits choices. 0 means disabled.'),
+          Slider(
+            value: topK.toDouble(),
+            min: 0,
+            max: 200,
+            divisions: 40,
+            label: '$topK',
+            onChanged: (value) => onChanged(value.round()),
+          ),
+        ],
+      ),
+      trailing: Text(
+        '$topK',
+        style: AppTypography.labelMedium,
+      ),
+    );
+  }
+}
+
+/// AI repeat-penalty slider tile.
+class _AiRepeatPenaltyTile extends StatelessWidget {
+  final double repeatPenalty;
+  final ValueChanged<double> onChanged;
+
+  const _AiRepeatPenaltyTile({
+    required this.repeatPenalty,
+    required this.onChanged,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return ListTile(
+      title: const Text('AI Repeat Penalty'),
+      subtitle: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text('Higher value reduces repeated words.'),
+          Slider(
+            value: repeatPenalty,
+            min: 1.0,
+            max: 2.0,
+            divisions: 20,
+            label: repeatPenalty.toStringAsFixed(2),
+            onChanged: onChanged,
+          ),
+        ],
+      ),
+      trailing: Text(
+        repeatPenalty.toStringAsFixed(2),
         style: AppTypography.labelMedium,
       ),
     );

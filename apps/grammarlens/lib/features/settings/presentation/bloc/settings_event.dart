@@ -40,6 +40,24 @@ class AiTemperatureChanged extends SettingsEvent {
   const AiTemperatureChanged({required this.temperature});
 }
 
+/// Change AI top-p.
+class AiTopPChanged extends SettingsEvent {
+  final double topP;
+  const AiTopPChanged({required this.topP});
+}
+
+/// Change AI top-k.
+class AiTopKChanged extends SettingsEvent {
+  final int topK;
+  const AiTopKChanged({required this.topK});
+}
+
+/// Change AI repeat penalty.
+class AiRepeatPenaltyChanged extends SettingsEvent {
+  final double repeatPenalty;
+  const AiRepeatPenaltyChanged({required this.repeatPenalty});
+}
+
 /// Toggle visibility of debug output page in top menu.
 class DebugMenuToggled extends SettingsEvent {
   final bool enabled;
