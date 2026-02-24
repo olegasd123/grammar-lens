@@ -41,6 +41,9 @@ class EditorPage extends StatefulWidget {
 }
 
 class _EditorPageState extends State<EditorPage> {
+  static const _statsBarHeight = 48.0;
+  static const _statsBarActionSlotWidth = 148.0;
+
   late final HighlightingTextController _textController;
   EditorBloc? _editorBloc;
 
@@ -49,7 +52,7 @@ class _EditorPageState extends State<EditorPage> {
     super.initState();
     _textController = HighlightingTextController();
     // Create initial EditorBloc without analyzer (no model yet)
-    _editorBloc = EditorBloc();
+    _editorBloc = EditorBloc(autoCheckEnabled: _autoCheckEnabled);
   }
 
   @override
@@ -72,7 +75,10 @@ class _EditorPageState extends State<EditorPage> {
 
     final analyzer = _buildAnalyzer(engine);
 
-    _editorBloc = EditorBloc(analyzer: analyzer);
+    _editorBloc = EditorBloc(
+      analyzer: analyzer,
+      autoCheckEnabled: _autoCheckEnabled,
+    );
     if (Platform.isMacOS) {
       getIt<ExternalCheckBloc>().setAnalyzer(analyzer);
     }
@@ -92,7 +98,7 @@ class _EditorPageState extends State<EditorPage> {
   void _onModelUnloaded() {
     final currentText = _editorBloc?.state.text ?? '';
     _editorBloc?.close();
-    _editorBloc = EditorBloc();
+    _editorBloc = EditorBloc(autoCheckEnabled: _autoCheckEnabled);
     if (Platform.isMacOS) {
       getIt<ExternalCheckBloc>().setAnalyzer(null);
     }
@@ -148,6 +154,14 @@ class _EditorPageState extends State<EditorPage> {
     };
   }
 
+  bool get _autoCheckEnabled =>
+      getIt<SettingsBloc>().state.preferences.autoCheck;
+
+  void _runManualCheck() {
+    final text = _editorBloc?.state.text ?? '';
+    _editorBloc?.add(AnalyzeRequested(text: text));
+  }
+
   void _syncControllerText(String newText) {
     if (_textController.text == newText) return;
 
@@ -179,6 +193,17 @@ class _EditorPageState extends State<EditorPage> {
                 modelState.status == ModelStatus.error) {
               _onModelUnloaded();
             }
+          },
+        ),
+        BlocListener<SettingsBloc, SettingsState>(
+          listenWhen: (prev, curr) =>
+              prev.preferences.autoCheck != curr.preferences.autoCheck,
+          listener: (context, settingsState) {
+            _editorBloc?.add(
+              AutoCheckModeChanged(
+                enabled: settingsState.preferences.autoCheck,
+              ),
+            );
           },
         ),
         if (Platform.isMacOS)
@@ -217,12 +242,27 @@ class _EditorPageState extends State<EditorPage> {
                 },
               ),
               const SizedBox(width: 8),
-
-              // Analysis status indicator
-              BlocBuilder<EditorBloc, EditorState>(
-                buildWhen: (prev, curr) => prev.status != curr.status,
-                builder: (context, state) {
-                  return _StatusIndicator(status: state.status);
+              BlocBuilder<SettingsBloc, SettingsState>(
+                buildWhen: (prev, curr) =>
+                    prev.preferences.autoCheck != curr.preferences.autoCheck,
+                builder: (context, settingsState) {
+                  if (settingsState.preferences.autoCheck) {
+                    return const SizedBox.shrink();
+                  }
+                  return BlocBuilder<EditorBloc, EditorState>(
+                    buildWhen: (prev, curr) =>
+                        prev.status != curr.status || prev.text != curr.text,
+                    builder: (context, state) {
+                      return IconButton(
+                        onPressed: state.status == AnalysisStatus.analyzing ||
+                                state.text.trim().isEmpty
+                            ? null
+                            : _runManualCheck,
+                        icon: const Icon(Icons.spellcheck),
+                        tooltip: 'Check now',
+                      );
+                    },
+                  );
                 },
               ),
               const SizedBox(width: 8),
@@ -374,55 +414,92 @@ class _EditorPageState extends State<EditorPage> {
       child: Column(
         children: [
           // Stats bar
-          BlocBuilder<EditorBloc, EditorState>(
-            buildWhen: (prev, curr) => prev.statistics != curr.statistics,
-            builder: (context, state) {
-              final stats = state.statistics;
-              if (stats == null) return const SizedBox(height: 40);
+          BlocBuilder<ModelBloc, ModelState>(
+            buildWhen: (prev, curr) => prev.isReady != curr.isReady,
+            builder: (context, modelState) {
+              if (!modelState.isReady) {
+                return const SizedBox.shrink();
+              }
+              return BlocBuilder<EditorBloc, EditorState>(
+                buildWhen: (prev, curr) => prev.statistics != curr.statistics,
+                builder: (context, state) {
+                  final stats = state.statistics;
+                  if (stats == null) return const SizedBox.shrink();
 
-              return Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                color: Theme.of(context).colorScheme.surfaceContainerHighest,
-                child: Row(
-                  children: [
-                    _StatChip(
-                      label: 'Words',
-                      value: '${stats.wordCount}',
-                    ),
-                    const SizedBox(width: 16),
-                    _StatChip(
-                      label: 'Sentences',
-                      value: '${stats.sentenceCount}',
-                    ),
-                    const SizedBox(width: 16),
-                    _StatChip(
-                      label: 'Reading',
-                      value:
-                          '${stats.readingTimeMinutes.toStringAsFixed(1)} min',
-                    ),
-                    const Spacer(),
-                    BlocBuilder<EditorBloc, EditorState>(
-                      buildWhen: (prev, curr) =>
-                          prev.activeCorrectionsCount !=
-                          curr.activeCorrectionsCount,
-                      builder: (context, state) {
-                        if (state.activeCorrectionsCount == 0) {
-                          return const SizedBox.shrink();
-                        }
-                        return TextButton.icon(
-                          onPressed: () {
-                            _editorBloc!.add(const AcceptAllCorrections());
-                          },
-                          icon: const Icon(Icons.done_all, size: 18),
-                          label: Text(
-                            'Fix all (${state.activeCorrectionsCount})',
+                  return SizedBox(
+                    height: _statsBarHeight,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                      color:
+                          Theme.of(context).colorScheme.surfaceContainerHighest,
+                      child: Row(
+                        children: [
+                          _StatChip(
+                            label: 'Words',
+                            value: '${stats.wordCount}',
                           ),
-                        );
-                      },
+                          const SizedBox(width: 16),
+                          _StatChip(
+                            label: 'Sentences',
+                            value: '${stats.sentenceCount}',
+                          ),
+                          const SizedBox(width: 16),
+                          _StatChip(
+                            label: 'Reading',
+                            value:
+                                '${stats.readingTimeMinutes.toStringAsFixed(1)} min',
+                          ),
+                          const Spacer(),
+                          SizedBox(
+                            width: _statsBarActionSlotWidth,
+                            child: Align(
+                              alignment: Alignment.centerRight,
+                              child: BlocBuilder<EditorBloc, EditorState>(
+                                buildWhen: (prev, curr) =>
+                                    prev.status != curr.status ||
+                                    prev.activeCorrectionsCount !=
+                                        curr.activeCorrectionsCount,
+                                builder: (context, state) {
+                                  if (state.status ==
+                                      AnalysisStatus.analyzing) {
+                                    return const SizedBox(
+                                      width: 18,
+                                      height: 18,
+                                      child: CircularProgressIndicator(
+                                        strokeWidth: 2,
+                                      ),
+                                    );
+                                  }
+                                  if (state.activeCorrectionsCount > 0) {
+                                    return TextButton.icon(
+                                      onPressed: () {
+                                        _editorBloc!
+                                            .add(const AcceptAllCorrections());
+                                      },
+                                      icon:
+                                          const Icon(Icons.done_all, size: 18),
+                                      label: Text(
+                                        'Fix all (${state.activeCorrectionsCount})',
+                                      ),
+                                    );
+                                  }
+                                  if (state.status == AnalysisStatus.complete) {
+                                    return const Icon(
+                                      Icons.check_circle,
+                                      color: AppColors.successGreen,
+                                      size: 20,
+                                    );
+                                  }
+                                  return const SizedBox.shrink();
+                                },
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
-                  ],
-                ),
+                  );
+                },
               );
             },
           ),
@@ -472,32 +549,6 @@ class _EditorPageState extends State<EditorPage> {
         );
       },
     );
-  }
-}
-
-/// Small status indicator in the app bar.
-class _StatusIndicator extends StatelessWidget {
-  final AnalysisStatus status;
-
-  const _StatusIndicator({required this.status});
-
-  @override
-  Widget build(BuildContext context) {
-    switch (status) {
-      case AnalysisStatus.idle:
-        return const SizedBox.shrink();
-      case AnalysisStatus.analyzing:
-        return const SizedBox(
-          width: 16,
-          height: 16,
-          child: CircularProgressIndicator(strokeWidth: 2),
-        );
-      case AnalysisStatus.complete:
-        return const Icon(Icons.check_circle,
-            color: AppColors.successGreen, size: 20);
-      case AnalysisStatus.error:
-        return const Icon(Icons.error, color: AppColors.errorRed, size: 20);
-    }
   }
 }
 

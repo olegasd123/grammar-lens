@@ -53,6 +53,53 @@ void main() {
           expect(bloc.state.statistics!.wordCount, greaterThan(0));
         },
       );
+
+      blocTest<EditorBloc, EditorState>(
+        'does not auto-analyze when auto-check is disabled',
+        build: () => EditorBloc(
+          analyzer: mockAnalyzer,
+          autoCheckEnabled: false,
+        ),
+        act: (bloc) => bloc.add(const TextChanged(text: 'Helo world')),
+        wait: const Duration(milliseconds: 600),
+        verify: (_) {
+          verifyNever(
+            () => mockAnalyzer.analyze(
+              any(),
+              language: any(named: 'language'),
+            ),
+          );
+        },
+      );
+
+      blocTest<EditorBloc, EditorState>(
+        'auto-analyzes after typing when auto-check is enabled',
+        setUp: () {
+          when(() => mockAnalyzer.analyze(
+                any(),
+                language: any(named: 'language'),
+              )).thenAnswer(
+            (_) async => AnalysisResult(
+              corrections: const [],
+              language: SupportedLanguage.english,
+            ),
+          );
+        },
+        build: () => EditorBloc(
+          analyzer: mockAnalyzer,
+          autoCheckEnabled: true,
+        ),
+        act: (bloc) => bloc.add(const TextChanged(text: 'Hello world')),
+        wait: const Duration(milliseconds: 600),
+        verify: (_) {
+          verify(
+            () => mockAnalyzer.analyze(
+              any(),
+              language: any(named: 'language'),
+            ),
+          ).called(1);
+        },
+      );
     });
 
     group('LanguageChanged', () {
@@ -159,6 +206,29 @@ void main() {
               .having((s) => s.status, 'status', AnalysisStatus.error)
               .having((s) => s.errorMessage, 'errorMessage', isNotNull),
         ],
+      );
+    });
+
+    group('AutoCheckModeChanged', () {
+      blocTest<EditorBloc, EditorState>(
+        'disabling auto-check cancels pending debounce analysis',
+        build: () => EditorBloc(
+          analyzer: mockAnalyzer,
+          autoCheckEnabled: true,
+        ),
+        act: (bloc) async {
+          bloc.add(const TextChanged(text: 'Hello world'));
+          bloc.add(const AutoCheckModeChanged(enabled: false));
+        },
+        wait: const Duration(milliseconds: 600),
+        verify: (_) {
+          verifyNever(
+            () => mockAnalyzer.analyze(
+              any(),
+              language: any(named: 'language'),
+            ),
+          );
+        },
       );
     });
 

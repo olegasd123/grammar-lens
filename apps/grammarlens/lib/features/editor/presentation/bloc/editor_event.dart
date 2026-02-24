@@ -39,3 +39,9 @@ class AnalyzeRequested extends EditorEvent {
   final String text;
   const AnalyzeRequested({required this.text});
 }
+
+/// Auto-check mode changed in settings.
+class AutoCheckModeChanged extends EditorEvent {
+  final bool enabled;
+  const AutoCheckModeChanged({required this.enabled});
+}

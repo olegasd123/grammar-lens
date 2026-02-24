@@ -241,5 +241,34 @@ Solution 2:
       final corrections = CorrectionParser.parse(xml, sentences);
       expect(corrections, isEmpty);
     });
+
+    test('unwraps quoted spans when source has no quotes', () {
+      const xml = '''
+<corrections>
+<item>
+  <original>"I wish I could have helped you."</original>
+  <corrected>"I wish I had been able to help you."</corrected>
+  <type>grammar</type>
+  <explanation>Fix tense.</explanation>
+</item>
+</corrections>''';
+
+      final sentences = [
+        const SentenceSpan(
+          text: 'I wish I could have helped you.',
+          startOffset: 0,
+          endOffset: 30,
+        ),
+      ];
+
+      final corrections = CorrectionParser.parse(xml, sentences);
+      expect(corrections, hasLength(1));
+      expect(corrections.first.originalText, 'I wish I could have helped you.');
+      expect(
+        corrections.first.correctedText,
+        'I wish I had been able to help you.',
+      );
+      expect(corrections.first.startOffset, 0);
+    });
   });
 }

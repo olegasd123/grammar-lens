@@ -18,15 +18,18 @@ class EditorBloc extends Bloc<EditorEvent, EditorState> {
   final GrammarAnalyzer? _analyzer;
   final LanguageDetector _languageDetector;
   final TextStatisticsCalculator _statisticsCalculator;
+  bool _autoCheckEnabled;
 
   Timer? _debounceTimer;
 
   EditorBloc({
     GrammarAnalyzer? analyzer,
+    bool autoCheckEnabled = true,
     LanguageDetector languageDetector = const LanguageDetector(),
     TextStatisticsCalculator statisticsCalculator =
         const TextStatisticsCalculator(),
   })  : _analyzer = analyzer,
+        _autoCheckEnabled = autoCheckEnabled,
         _languageDetector = languageDetector,
         _statisticsCalculator = statisticsCalculator,
         super(const EditorState()) {
@@ -36,6 +39,7 @@ class EditorBloc extends Bloc<EditorEvent, EditorState> {
     on<CorrectionDismissed>(_onCorrectionDismissed);
     on<AcceptAllCorrections>(_onAcceptAll);
     on<AnalyzeRequested>(_onAnalyzeRequested);
+    on<AutoCheckModeChanged>(_onAutoCheckModeChanged);
   }
 
   Future<void> _onTextChanged(
@@ -53,8 +57,17 @@ class EditorBloc extends Bloc<EditorEvent, EditorState> {
     final stats = _statisticsCalculator.calculate(event.text, language);
     emit(state.copyWith(statistics: stats));
 
-    // Debounce grammar analysis (500ms)
     _debounceTimer?.cancel();
+    if (!_autoCheckEnabled) {
+      emit(state.copyWith(
+        status: AnalysisStatus.idle,
+        corrections: [],
+        clearRawModelOutput: true,
+      ));
+      return;
+    }
+
+    // Debounce grammar analysis (500ms)
     _debounceTimer = Timer(const Duration(milliseconds: 500), () {
       add(AnalyzeRequested(text: event.text));
     });
@@ -120,10 +133,18 @@ class EditorBloc extends Bloc<EditorEvent, EditorState> {
       emit(state.copyWith(selectedLanguage: event.languageCode));
     }
 
-    // Re-analyze with the new language
-    if (state.text.trim().isNotEmpty) {
+    // Re-analyze with the new language when auto-check is enabled.
+    if (_autoCheckEnabled && state.text.trim().isNotEmpty) {
       add(AnalyzeRequested(text: state.text));
     }
+  }
+
+  void _onAutoCheckModeChanged(
+    AutoCheckModeChanged event,
+    Emitter<EditorState> emit,
+  ) {
+    _autoCheckEnabled = event.enabled;
+    _debounceTimer?.cancel();
   }
 
   void _onCorrectionAccepted(

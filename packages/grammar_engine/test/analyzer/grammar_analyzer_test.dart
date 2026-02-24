@@ -138,6 +138,35 @@ void main() {
       expect(result.corrections, isEmpty);
     });
 
+    test('analyze keeps correction when model wraps spans in quotes', () async {
+      final analyzer = GrammarAnalyzer(
+        onInfer: (_) async => '''
+<corrections>
+<item>
+  <original>"I wish I could have helped you."</original>
+  <corrected>"I wish I had been able to help you."</corrected>
+  <type>grammar</type>
+  <explanation>Use a better past form after "wish".</explanation>
+</item>
+</corrections>''',
+      );
+
+      final result = await analyzer.analyze(
+        'I wish I could have helped you.',
+        language: SupportedLanguage.english,
+      );
+
+      expect(result.corrections, hasLength(1));
+      expect(
+        result.corrections.first.originalText,
+        'I wish I could have helped you.',
+      );
+      expect(
+        result.corrections.first.correctedText,
+        'I wish I had been able to help you.',
+      );
+    });
+
     test('analyze exposes raw model output for debugging', () async {
       const raw = '<corrections></corrections>';
       final analyzer = GrammarAnalyzer(

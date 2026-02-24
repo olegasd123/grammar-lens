@@ -16,6 +16,17 @@ class CorrectionParser {
     'no errors found',
     'correct as is',
   };
+  static const _quotePairs = [
+    ('"', '"'),
+    ("'", "'"),
+    ('“', '”'),
+    ('„', '“'),
+    ('‘', '’'),
+    ('‚', '’'),
+    ('«', '»'),
+    ('‹', '›'),
+    ('`', '`'),
+  ];
 
   /// Parse a complete XML corrections block.
   ///
@@ -89,7 +100,13 @@ class CorrectionParser {
           .allMatches(block)
           .map((m) => m.group(1)?.trim().toLowerCase() ?? '')
           .where(
-            (original) => original.isNotEmpty && sourceText.contains(original),
+            (original) =>
+                original.isNotEmpty &&
+                (_sourceContains(sourceText, original) ||
+                    _sourceContains(
+                      sourceText,
+                      _unwrapMatchingQuotes(original),
+                    )),
           )
           .length;
 
@@ -118,26 +135,39 @@ class CorrectionParser {
     List<SentenceSpan> sentences,
     int baseOffset,
   ) {
-    final original = _extractTag(itemXml, 'original');
-    final corrected = _extractTag(itemXml, 'corrected');
+    final originalRaw = _extractTag(itemXml, 'original');
+    final correctedRaw = _extractTag(itemXml, 'corrected');
     final type = _parseType(_extractTag(itemXml, 'type'));
     final explanation = _extractTag(itemXml, 'explanation');
 
-    if (original == null || corrected == null || type == null) return null;
-    if (_containsNoErrorMarker(corrected) ||
+    if (originalRaw == null || correctedRaw == null || type == null) {
+      return null;
+    }
+    if (_containsNoErrorMarker(correctedRaw) ||
         _containsNoErrorMarker(explanation)) {
       return null;
     }
 
-    final startOffset = _findOffsetByText(original, sentences, baseOffset);
+    final normalizedOriginal = _normalizeOriginalText(originalRaw, sentences);
+    final normalizedCorrected = _normalizeCorrectedText(
+      correctedRaw,
+      originalRaw: originalRaw,
+      normalizedOriginal: normalizedOriginal,
+    );
 
-    final endOffset = startOffset + original.length;
+    final startOffset = _findOffsetByText(
+      normalizedOriginal,
+      sentences,
+      baseOffset,
+    );
+
+    final endOffset = startOffset + normalizedOriginal.length;
 
     return Correction(
       startOffset: startOffset,
       endOffset: endOffset,
-      originalText: original,
-      correctedText: corrected,
+      originalText: normalizedOriginal,
+      correctedText: normalizedCorrected,
       type: type,
       explanation: explanation ?? '',
     );
@@ -173,6 +203,78 @@ class CorrectionParser {
       }
     }
     return false;
+  }
+
+  static String _normalizeOriginalText(
+    String original,
+    List<SentenceSpan> sentences,
+  ) {
+    final trimmed = original.trim();
+    if (_textExistsInSentences(trimmed, sentences)) {
+      return trimmed;
+    }
+
+    final unwrapped = _unwrapMatchingQuotes(trimmed);
+    if (unwrapped != trimmed && _textExistsInSentences(unwrapped, sentences)) {
+      return unwrapped;
+    }
+
+    return trimmed;
+  }
+
+  static String _normalizeCorrectedText(
+    String corrected, {
+    required String originalRaw,
+    required String normalizedOriginal,
+  }) {
+    final trimmed = corrected.trim();
+    final originalWasUnwrapped = originalRaw.trim() != normalizedOriginal;
+    if (!originalWasUnwrapped) {
+      return trimmed;
+    }
+    return _unwrapMatchingQuotes(trimmed);
+  }
+
+  static bool _textExistsInSentences(
+    String text,
+    List<SentenceSpan> sentences,
+  ) {
+    if (text.isEmpty) {
+      return false;
+    }
+    for (final sentence in sentences) {
+      if (sentence.text.contains(text)) {
+        return true;
+      }
+    }
+    final lower = text.toLowerCase();
+    for (final sentence in sentences) {
+      if (sentence.text.toLowerCase().contains(lower)) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  static bool _sourceContains(String sourceText, String candidate) {
+    if (candidate.isEmpty) {
+      return false;
+    }
+    return sourceText.contains(candidate);
+  }
+
+  static String _unwrapMatchingQuotes(String text) {
+    final trimmed = text.trim();
+    if (trimmed.length < 2) {
+      return trimmed;
+    }
+
+    for (final (open, close) in _quotePairs) {
+      if (trimmed.startsWith(open) && trimmed.endsWith(close)) {
+        return trimmed.substring(open.length, trimmed.length - close.length);
+      }
+    }
+    return trimmed;
   }
 
   /// Find the character offset of [text] within the sentences.

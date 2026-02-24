@@ -1,5 +1,18 @@
 import 'package:grammar_engine/grammar_engine.dart';
 
+const _initialTextStats = TextStats(
+  wordCount: 0,
+  characterCount: 0,
+  characterCountNoSpaces: 0,
+  sentenceCount: 0,
+  paragraphCount: 0,
+  avgWordsPerSentence: 0,
+  avgWordLength: 0,
+  readingTimeMinutes: 0,
+  speakingTimeMinutes: 0,
+  vocabularyRichness: 0,
+);
+
 /// Status of the grammar analysis.
 enum AnalysisStatus {
   /// No analysis running, no results.
@@ -45,7 +58,7 @@ class EditorState {
     this.text = '',
     this.status = AnalysisStatus.idle,
     this.corrections = const [],
-    this.statistics,
+    this.statistics = _initialTextStats,
     this.selectedLanguage,
     this.detectedLanguage,
     this.errorMessage,
