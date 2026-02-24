@@ -126,7 +126,6 @@ Output format:
   <corrected>fixed text span</corrected>
   <type>grammar|spelling|punctuation|style</type>
   <explanation>brief explanation of the error</explanation>
-  <offset>character offset in input</offset>
 </item>
 </corrections>''';
 
@@ -151,7 +150,6 @@ Output format:
   <corrected>fixed text span</corrected>
   <type>grammar|spelling|punctuation|style</type>
   <explanation>brief explanation of the error</explanation>
-  <offset>character offset in input</offset>
 </item>
 </corrections>''';
 
@@ -176,7 +174,6 @@ Formato de salida:
   <corrected>texto corregido</corrected>
   <type>grammar|spelling|punctuation|style</type>
   <explanation>breve explicación del error</explanation>
-  <offset>desplazamiento de carácter en la entrada</offset>
 </item>
 </corrections>''';
 
@@ -201,7 +198,6 @@ Format de sortie:
   <corrected>texte corrigé</corrected>
   <type>grammar|spelling|punctuation|style</type>
   <explanation>brève explication de l'erreur</explanation>
-  <offset>décalage de caractère dans l'entrée</offset>
 </item>
 </corrections>''';
 
@@ -226,7 +222,6 @@ Ausgabeformat:
   <corrected>korrigierter Text</corrected>
   <type>grammar|spelling|punctuation|style</type>
   <explanation>kurze Erklärung des Fehlers</explanation>
-  <offset>Zeichenversatz in der Eingabe</offset>
 </item>
 </corrections>''';
 
@@ -252,7 +247,6 @@ Ausgabeformat:
   <corrected>исправленный фрагмент</corrected>
   <type>grammar|spelling|punctuation|style</type>
   <explanation>краткое объяснение ошибки</explanation>
-  <offset>смещение символа во входном тексте</offset>
 </item>
 </corrections>''';
 
@@ -277,7 +271,6 @@ Formato de saída:
   <corrected>texto corrigido</corrected>
   <type>grammar|spelling|punctuation|style</type>
   <explanation>breve explicação do erro</explanation>
-  <offset>deslocamento de caractere na entrada</offset>
 </item>
 </corrections>''';
 
@@ -286,14 +279,12 @@ Formato de saída:
 root        ::= "<corrections>" items "</corrections>"
 items       ::= item*
 item        ::= "\n<item>\n" content "</item>\n"
-content     ::= original corrected type explanation offset
+content     ::= original corrected type explanation
 original    ::= "  <original>" text "</original>\n"
 corrected   ::= "  <corrected>" text "</corrected>\n"
 type        ::= "  <type>" type-value "</type>\n"
 explanation ::= "  <explanation>" text "</explanation>\n"
-offset      ::= "  <offset>" digits "</offset>\n"
 type-value  ::= "grammar" | "spelling" | "punctuation" | "style"
 text        ::= [^<]+
-digits      ::= [0-9]+
 ''';
 }

@@ -12,7 +12,6 @@ void main() {
   <corrected>Hola mi amiga</corrected>
   <type>spelling</type>
   <explanation>No error found.</explanation>
-  <offset>0</offset>
 </item>
 </corrections>''',
       );
@@ -34,14 +33,12 @@ void main() {
   <corrected>Hello</corrected>
   <type>spelling</type>
   <explanation>Fix typo.</explanation>
-  <offset>0</offset>
 </item>
 <item>
   <original>world</original>
   <corrected>world</corrected>
   <type>style</type>
   <explanation>No error found.</explanation>
-  <offset>5</offset>
 </item>
 </corrections>''',
       );
@@ -65,7 +62,6 @@ void main() {
   <corrected>I had already eaten breakfast. (no correction needed)</corrected>
   <type></type>
   <explanation>(no error found)</explanation>
-  <offset>0</offset>
 </item>
 </corrections>''',
       );
@@ -87,7 +83,6 @@ void main() {
   <corrected>Hola</corrected>
   <type>spelling</type>
   <explanation>No error found.</explanation>
-  <offset>0</offset>
 </item>
 </corrections>''',
       );
@@ -109,7 +104,6 @@ void main() {
   <corrected>fixed text span</corrected>
   <type>grammar</type>
   <explanation>brief explanation of the error</explanation>
-  <offset>0</offset>
 </item>
 </corrections>''',
       );
@@ -132,7 +126,6 @@ void main() {
   <corrected>fixed phrase</corrected>
   <type>grammar</type>
   <explanation>Fix.</explanation>
-  <offset>0</offset>
 </item>
 </corrections>''',
       );

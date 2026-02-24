@@ -122,7 +122,6 @@ class CorrectionParser {
     final corrected = _extractTag(itemXml, 'corrected');
     final type = _parseType(_extractTag(itemXml, 'type'));
     final explanation = _extractTag(itemXml, 'explanation');
-    final offsetStr = _extractTag(itemXml, 'offset');
 
     if (original == null || corrected == null || type == null) return null;
     if (_containsNoErrorMarker(corrected) ||
@@ -130,25 +129,7 @@ class CorrectionParser {
       return null;
     }
 
-    // Parse the offset from model output, or find it by searching
-    var startOffset = baseOffset;
-    if (offsetStr != null) {
-      final parsed = int.tryParse(offsetStr.trim());
-      if (parsed != null) {
-        // Validate the offset is within the bounds of the input text
-        final totalTextLength =
-            sentences.fold<int>(0, (sum, s) => sum + s.text.length);
-        if (parsed >= 0 && parsed < totalTextLength) {
-          startOffset = baseOffset + parsed;
-        } else {
-          startOffset = _findOffsetByText(original, sentences, baseOffset);
-        }
-      } else {
-        startOffset = _findOffsetByText(original, sentences, baseOffset);
-      }
-    } else {
-      startOffset = _findOffsetByText(original, sentences, baseOffset);
-    }
+    final startOffset = _findOffsetByText(original, sentences, baseOffset);
 
     final endOffset = startOffset + original.length;
 
@@ -196,7 +177,8 @@ class CorrectionParser {
 
   /// Find the character offset of [text] within the sentences.
   ///
-  /// Used as fallback when the model doesn't provide a valid offset.
+  /// The model output does not include offsets, so we resolve it by text
+  /// matching against the input sentences.
   static int _findOffsetByText(
     String text,
     List<SentenceSpan> sentences,

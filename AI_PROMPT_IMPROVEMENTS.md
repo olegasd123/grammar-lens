@@ -48,7 +48,7 @@ With GBNF enabled, temperature 0.0 + constrained grammar gives the most predicta
 
 **Proposal:** Replace the placeholder-based format description with concrete few-shot examples. This teaches the model the format through demonstration rather than description.
 
-For the English prompt, change the output format section from:
+For the prompts, change the output format section from:
 
 ```
 Output format:
@@ -67,8 +67,8 @@ Example 1 – text with errors:
 Input: "He dont likes the cake."
 <corrections>
 <item>
-  <original>dont likes</original>
-  <corrected>doesn't like</corrected>
+  <original>He dont likes the cake.</original>
+  <corrected>He doesn't like the cake.</corrected>
   <type>grammar</type>
   <explanation>Subject-verb agreement: third person singular requires "doesn't like"</explanation>
   <offset>3</offset>
@@ -92,7 +92,7 @@ Apply the same pattern to all language-specific prompts with language-appropriat
 
 ---
 
-## 4. Improve Offset Instruction Clarity
+## [Done] 4. Improve Offset Instruction Clarity
 
 **Problem:** The prompt says `<offset>character offset in input</offset>`. Models frequently produce wrong offsets — the fallback `_findOffsetByText()` in `correction_parser.dart` is hit regularly. The concept of "character offset" is ambiguous for small models (byte offset? word index? line number?).
 

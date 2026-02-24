@@ -141,7 +141,7 @@ DATA          →  Repository Impls | LlamaInference | Local Storage
   <item>
     <original>...</original><corrected>...</corrected>
     <type>grammar|spelling|punctuation|style</type>
-    <explanation>...</explanation><offset>N</offset>
+    <explanation>...</explanation>
   </item>
 </corrections>
 ```
@@ -178,7 +178,7 @@ User types → Debounce (300ms sentence / 800ms paragraph)
            → Build prompt + GBNF grammar
            → Isolate → llama.cpp inference (streaming tokens)
            → Stream-parse XML → Correction objects
-           → Map offsets back to original text
+           → Resolve offsets by matching <original> text in source
            → Merge with existing corrections (avoid flicker)
            → BLoC state update → UI rebuilds RichText
 ```

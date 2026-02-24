@@ -49,5 +49,16 @@ void main() {
       expect(prompt, contains('Проверь следующий текст'));
       expect(prompt, contains('helo me freind'));
     });
+
+    test('prompt contract does not include offset tag', () {
+      final prompt = PromptBuilder.build(
+        sentences,
+        SupportedLanguage.english,
+        format: PromptFormat.plainInstruction,
+      );
+
+      expect(prompt, isNot(contains('<offset>')));
+      expect(PromptBuilder.gbnfGrammar, isNot(contains('<offset>')));
+    });
   });
 }

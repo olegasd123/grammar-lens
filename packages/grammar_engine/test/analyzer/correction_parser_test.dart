@@ -11,7 +11,6 @@ void main() {
   <corrected>don't</corrected>
   <type>grammar</type>
   <explanation>Missing apostrophe in contraction</explanation>
-  <offset>3</offset>
 </item>
 </corrections>''';
 
@@ -39,14 +38,12 @@ void main() {
   <corrected>don't</corrected>
   <type>grammar</type>
   <explanation>Missing apostrophe</explanation>
-  <offset>3</offset>
 </item>
 <item>
   <original>teh</original>
   <corrected>the</corrected>
   <type>spelling</type>
   <explanation>Misspelled word</explanation>
-  <offset>14</offset>
 </item>
 </corrections>''';
 
@@ -89,7 +86,7 @@ void main() {
       expect(corrections, isA<List<Correction>>());
     });
 
-    test('falls back to text search when offset is invalid', () {
+    test('finds start offset by searching original text', () {
       const xml = '''
 <corrections>
 <item>
@@ -97,7 +94,6 @@ void main() {
   <corrected>don't</corrected>
   <type>grammar</type>
   <explanation>Fix</explanation>
-  <offset>999</offset>
 </item>
 </corrections>''';
 
@@ -124,7 +120,6 @@ Solution:
   <corrected>здравствуй, друг</corrected>
   <type>spelling</type>
   <explanation>опечатка</explanation>
-  <offset>0</offset>
 </item>
 </corrections>
 
@@ -157,7 +152,6 @@ Solution 2:
   <corrected>Hola amiga, ¿cómo estás?</corrected>
   <type>grammar</type>
   <explanation>Error en "camo".</explanation>
-  <offset>0</offset>
 </item>
 </corrections>
 ''';
@@ -186,7 +180,6 @@ Solution 2:
   <corrected>Corrected text</corrected>
   <type>grammar</type>
   <explanation>Not related.</explanation>
-  <offset>0</offset>
 </item>
 </corrections>
 ''';
@@ -211,7 +204,6 @@ Solution 2:
   <corrected>I had already eaten breakfast. (no correction needed)</corrected>
   <type></type>
   <explanation>(no error found)</explanation>
-  <offset>0</offset>
 </item>
 </corrections>''';
 
@@ -235,7 +227,6 @@ Solution 2:
   <corrected>There are too many people in this room. (no correction needed)</corrected>
   <type>grammar</type>
   <explanation>(no error found)</explanation>
-  <offset>0</offset>
 </item>
 </corrections>''';
 
