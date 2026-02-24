@@ -20,6 +20,11 @@ class LanguageDetector {
       return scriptLanguage;
     }
 
+    final englishHintLanguage = _detectEnglishByWordHints(text);
+    if (englishHintLanguage != null) {
+      return englishHintLanguage;
+    }
+
     if (text.trim().length < 20) {
       return SupportedLanguage.english; // Too short for reliable detection
     }
@@ -82,6 +87,49 @@ class LanguageDetector {
 
     return scores;
   }
+
+  static SupportedLanguage? _detectEnglishByWordHints(String text) {
+    final words = RegExp("[a-z']+")
+        .allMatches(text.toLowerCase())
+        .map((match) => match.group(0) ?? '')
+        .where((word) => word.isNotEmpty)
+        .toList();
+    if (words.isEmpty) {
+      return null;
+    }
+
+    var englishHints = 0;
+    for (final word in words) {
+      if (_englishWordHints.contains(word)) {
+        englishHints++;
+      }
+    }
+
+    // Require at least two strong English hints to avoid false positives.
+    if (englishHints >= 2) {
+      return SupportedLanguage.english;
+    }
+
+    return null;
+  }
+
+  static const _englishWordHints = {
+    'already',
+    'breakfast',
+    'could',
+    'from',
+    'had',
+    'has',
+    'have',
+    'should',
+    'that',
+    'this',
+    'today',
+    'were',
+    'with',
+    'would',
+    'yesterday',
+  };
 
   static SupportedLanguage? _detectByScript(String text) {
     if (_hangulPattern.hasMatch(text)) {

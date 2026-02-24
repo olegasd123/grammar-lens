@@ -12,6 +12,13 @@ void main() {
       expect(result, SupportedLanguage.english);
     });
 
+    test('detects English for breakfast sentence regression case', () {
+      final result = detector.detect(
+        'I had eaten breakfast already.',
+      );
+      expect(result, SupportedLanguage.english);
+    });
+
     test('detects Spanish text', () {
       final result = detector.detect(
         'El rápido zorro marrón salta sobre el perro perezoso en el parque.',
