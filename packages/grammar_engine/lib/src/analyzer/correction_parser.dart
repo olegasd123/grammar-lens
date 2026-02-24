@@ -9,6 +9,13 @@ import 'package:grammar_engine/src/models/correction_type.dart';
 /// for performance and to handle malformed model output gracefully.
 class CorrectionParser {
   const CorrectionParser._();
+  static const _noErrorMarkers = {
+    'no correction needed',
+    'no corrections needed',
+    'no error found',
+    'no errors found',
+    'correct as is',
+  };
 
   /// Parse a complete XML corrections block.
   ///
@@ -113,11 +120,15 @@ class CorrectionParser {
   ) {
     final original = _extractTag(itemXml, 'original');
     final corrected = _extractTag(itemXml, 'corrected');
-    final type = _extractTag(itemXml, 'type');
+    final type = _parseType(_extractTag(itemXml, 'type'));
     final explanation = _extractTag(itemXml, 'explanation');
     final offsetStr = _extractTag(itemXml, 'offset');
 
-    if (original == null || corrected == null) return null;
+    if (original == null || corrected == null || type == null) return null;
+    if (_containsNoErrorMarker(corrected) ||
+        _containsNoErrorMarker(explanation)) {
+      return null;
+    }
 
     // Parse the offset from model output, or find it by searching
     var startOffset = baseOffset;
@@ -146,9 +157,20 @@ class CorrectionParser {
       endOffset: endOffset,
       originalText: original,
       correctedText: corrected,
-      type: CorrectionType.fromString(type ?? 'grammar'),
+      type: type,
       explanation: explanation ?? '',
     );
+  }
+
+  static CorrectionType? _parseType(String? rawType) {
+    if (rawType == null) return null;
+    final normalizedType = rawType.trim().toLowerCase();
+    for (final type in CorrectionType.values) {
+      if (type.value == normalizedType) {
+        return type;
+      }
+    }
+    return null;
   }
 
   /// Extract the text content of an XML tag.
@@ -159,6 +181,17 @@ class CorrectionParser {
     );
     final match = pattern.firstMatch(xml);
     return match?.group(1)?.trim();
+  }
+
+  static bool _containsNoErrorMarker(String? value) {
+    if (value == null) return false;
+    final normalized = value.trim().toLowerCase();
+    for (final marker in _noErrorMarkers) {
+      if (normalized.contains(marker)) {
+        return true;
+      }
+    }
+    return false;
   }
 
   /// Find the character offset of [text] within the sentences.

@@ -202,5 +202,53 @@ Solution 2:
       final corrections = CorrectionParser.parse(xml, sentences);
       expect(corrections, isEmpty);
     });
+
+    test('drops corrections with empty type', () {
+      const xml = '''
+<corrections>
+<item>
+  <original>I had already eaten breakfast.</original>
+  <corrected>I had already eaten breakfast. (no correction needed)</corrected>
+  <type></type>
+  <explanation>(no error found)</explanation>
+  <offset>0</offset>
+</item>
+</corrections>''';
+
+      final sentences = [
+        const SentenceSpan(
+          text: 'I had already eaten breakfast.',
+          startOffset: 0,
+          endOffset: 31,
+        ),
+      ];
+
+      final corrections = CorrectionParser.parse(xml, sentences);
+      expect(corrections, isEmpty);
+    });
+
+    test('drops corrections with no-error marker text', () {
+      const xml = '''
+<corrections>
+<item>
+  <original>There are too many people in this room.</original>
+  <corrected>There are too many people in this room. (no correction needed)</corrected>
+  <type>grammar</type>
+  <explanation>(no error found)</explanation>
+  <offset>0</offset>
+</item>
+</corrections>''';
+
+      final sentences = [
+        const SentenceSpan(
+          text: 'There are too many people in this room.',
+          startOffset: 0,
+          endOffset: 38,
+        ),
+      ];
+
+      final corrections = CorrectionParser.parse(xml, sentences);
+      expect(corrections, isEmpty);
+    });
   });
 }

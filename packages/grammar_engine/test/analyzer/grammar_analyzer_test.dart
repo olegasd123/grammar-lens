@@ -56,6 +56,28 @@ void main() {
       expect(result.corrections.first.correctedText, 'Hello');
     });
 
+    test('analyze drops no-error items with empty type', () async {
+      final analyzer = GrammarAnalyzer(
+        onInfer: (_) async => '''
+<corrections>
+<item>
+  <original>I had already eaten breakfast.</original>
+  <corrected>I had already eaten breakfast. (no correction needed)</corrected>
+  <type></type>
+  <explanation>(no error found)</explanation>
+  <offset>0</offset>
+</item>
+</corrections>''',
+      );
+
+      final result = await analyzer.analyze(
+        'I had already eaten breakfast.',
+        language: SupportedLanguage.english,
+      );
+
+      expect(result.corrections, isEmpty);
+    });
+
     test('analyzeSentence filters no-op corrections', () async {
       final analyzer = GrammarAnalyzer(
         onInfer: (_) async => '''
