@@ -60,5 +60,25 @@ void main() {
       expect(prompt, isNot(contains('<offset>')));
       expect(PromptBuilder.gbnfGrammar, isNot(contains('<offset>')));
     });
+
+    test('prompts do not use placeholder output values', () {
+      for (final language in [
+        SupportedLanguage.english,
+        SupportedLanguage.spanish,
+        SupportedLanguage.french,
+        SupportedLanguage.german,
+        SupportedLanguage.russian,
+        SupportedLanguage.portuguese,
+      ]) {
+        final prompt = PromptBuilder.build(
+          sentences,
+          language,
+          format: PromptFormat.plainInstruction,
+        );
+
+        expect(prompt, isNot(contains('erroneous text span')));
+        expect(prompt, isNot(contains('fixed text span')));
+      }
+    });
   });
 }

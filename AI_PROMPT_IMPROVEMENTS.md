@@ -42,7 +42,7 @@ With GBNF enabled, temperature 0.0 + constrained grammar gives the most predicta
 
 ---
 
-## 3. Add Few-Shot Examples to System Prompts
+## [Done] 3. Add Few-Shot Examples to System Prompts
 
 **Problem:** The current prompts show the output format as a template with placeholder values (`erroneous text span`, `fixed text span`). Small models (Phi-3-mini, Mistral-7B) frequently repeat these placeholders verbatim, which is why `_placeholderOriginalTexts` / `_placeholderCorrectedTexts` / `_placeholderExplanations` exist as post-hoc filters in `grammar_analyzer.dart`.
 
@@ -71,7 +71,6 @@ Input: "He dont likes the cake."
   <corrected>He doesn't like the cake.</corrected>
   <type>grammar</type>
   <explanation>Subject-verb agreement: third person singular requires "doesn't like"</explanation>
-  <offset>3</offset>
 </item>
 </corrections>
 

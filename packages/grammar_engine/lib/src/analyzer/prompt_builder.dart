@@ -119,15 +119,24 @@ Rules:
 - Every <item> must have a non-empty <type> with one of: grammar, spelling, punctuation, style.
 - Be conservative: when unsure, do not flag.
 
-Output format:
+Examples:
+
+Example 1 - text with errors:
+Input: "He dont likes the cake."
 <corrections>
 <item>
-  <original>erroneous text span</original>
-  <corrected>fixed text span</corrected>
-  <type>grammar|spelling|punctuation|style</type>
-  <explanation>brief explanation of the error</explanation>
+  <original>He dont likes the cake.</original>
+  <corrected>He doesn't like the cake.</corrected>
+  <type>grammar</type>
+  <explanation>Subject-verb agreement: third person singular needs "doesn't like".</explanation>
 </item>
-</corrections>''';
+</corrections>
+
+Example 2 - text without errors:
+Input: "The weather is beautiful today."
+<corrections></corrections>
+
+Now analyze the user's text using the same format.''';
 
   static const _englishSystemPrompt = '''
 You are a precise English grammar checker. Analyze the input text and output corrections in XML format.
@@ -143,15 +152,24 @@ Rules:
 - Be conservative: when unsure, do not flag.
 - Check for: subject-verb agreement, tense consistency, article usage (a/an/the), pronoun reference, comma splices, run-on sentences, dangling modifiers, commonly confused words (their/there/they're, its/it's, etc.), spelling, and punctuation.
 
-Output format:
+Examples:
+
+Example 1 - text with errors:
+Input: "He dont likes the cake."
 <corrections>
 <item>
-  <original>erroneous text span</original>
-  <corrected>fixed text span</corrected>
-  <type>grammar|spelling|punctuation|style</type>
-  <explanation>brief explanation of the error</explanation>
+  <original>He dont likes the cake.</original>
+  <corrected>He doesn't like the cake.</corrected>
+  <type>grammar</type>
+  <explanation>Subject-verb agreement: third person singular needs "doesn't like".</explanation>
 </item>
-</corrections>''';
+</corrections>
+
+Example 2 - text without errors:
+Input: "The weather is beautiful today."
+<corrections></corrections>
+
+Now analyze the user's text using the same format.''';
 
   static const _spanishSystemPrompt = '''
 Eres un corrector gramatical preciso del español. Analiza el texto de entrada y devuelve correcciones en formato XML.
@@ -167,15 +185,24 @@ Reglas:
 - Sé conservador: en caso de duda, no marques.
 - Revisa: concordancia de género y número, uso de ser/estar, acentuación y reglas de tilde, uso del subjuntivo vs. indicativo, pretérito vs. imperfecto, pronombres de complemento directo e indirecto (leísmo, laísmo, loísmo), preposiciones (por/para, a/en), dequeísmo y queísmo, signos de apertura (¿ ¡), palabras comúnmente confundidas (haber/a ver, hay/ahí/ay, hecho/echo, vaya/valla, sino/si no), ortografía y puntuación.
 
-Formato de salida:
+Ejemplos:
+
+Ejemplo 1 - texto con errores:
+Entrada: "Ellos va al mercado ayer."
 <corrections>
 <item>
-  <original>texto erróneo</original>
-  <corrected>texto corregido</corrected>
-  <type>grammar|spelling|punctuation|style</type>
-  <explanation>breve explicación del error</explanation>
+  <original>Ellos va al mercado ayer.</original>
+  <corrected>Ellos fueron al mercado ayer.</corrected>
+  <type>grammar</type>
+  <explanation>Concordancia verbal y tiempo verbal: "Ellos" requiere "fueron".</explanation>
 </item>
-</corrections>''';
+</corrections>
+
+Ejemplo 2 - texto sin errores:
+Entrada: "El clima es agradable hoy."
+<corrections></corrections>
+
+Ahora analiza el texto del usuario con el mismo formato.''';
 
   static const _frenchSystemPrompt = '''
 Vous êtes un correcteur grammatical précis du français. Analysez le texte d'entrée et produisez des corrections au format XML.
@@ -191,15 +218,24 @@ Règles:
 - Soyez conservateur: en cas de doute, ne signalez pas.
 - Vérifiez: accord sujet-verbe, accord adjectif-nom (genre et nombre), usage des articles (définis, indéfinis, partitifs — du/de la/des), conjugaison verbale (verbes irréguliers inclus), passé composé vs. imparfait, accord du participe passé (avec être et avoir), accents (aigu, grave, circonflexe, tréma, cédille), négation (ne...pas, ne...jamais, ne...rien), mots couramment confondus (ces/ses/c'est/s'est, ou/où, a/à, et/est, ce/se, leur/leurs), orthographe et ponctuation.
 
-Format de sortie:
+Exemples:
+
+Exemple 1 - texte avec erreurs:
+Entrée: "Elle ont fini le travail."
 <corrections>
 <item>
-  <original>texte erroné</original>
-  <corrected>texte corrigé</corrected>
-  <type>grammar|spelling|punctuation|style</type>
-  <explanation>brève explication de l'erreur</explanation>
+  <original>Elle ont fini le travail.</original>
+  <corrected>Elles ont fini le travail.</corrected>
+  <type>grammar</type>
+  <explanation>Accord sujet-verbe: le sujet pluriel demande "Elles ont".</explanation>
 </item>
-</corrections>''';
+</corrections>
+
+Exemple 2 - texte sans erreurs:
+Entrée: "Le temps est agréable aujourd'hui."
+<corrections></corrections>
+
+Analysez maintenant le texte de l'utilisateur avec le même format.''';
 
   static const _germanSystemPrompt = '''
 Sie sind ein präziser deutscher Grammatikprüfer. Analysieren Sie den Eingabetext und geben Sie Korrekturen im XML-Format aus.
@@ -215,15 +251,24 @@ Regeln:
 - Seien Sie konservativ: im Zweifelsfall nicht markieren.
 - Prüfen Sie: Kasus (Nominativ, Akkusativ, Dativ, Genitiv), Genus-Kongruenz (der/die/das), Verbkonjugation (trennbare und untrennbare Verben), Wortstellung (Verb-Zweit-Stellung im Hauptsatz, Verb-End-Stellung im Nebensatz), Kommasetzung (insbesondere vor Nebensätzen), Groß- und Kleinschreibung (Substantivierung), zusammengesetzte Wörter, häufig verwechselte Wörter (das/dass, seit/seid, wider/wieder, weise/Weise), Rechtschreibung und Zeichensetzung.
 
-Ausgabeformat:
+Beispiele:
+
+Beispiel 1 - Text mit Fehlern:
+Eingabe: "Er gehen zur Schule."
 <corrections>
 <item>
-  <original>fehlerhafter Text</original>
-  <corrected>korrigierter Text</corrected>
-  <type>grammar|spelling|punctuation|style</type>
-  <explanation>kurze Erklärung des Fehlers</explanation>
+  <original>Er gehen zur Schule.</original>
+  <corrected>Er geht zur Schule.</corrected>
+  <type>grammar</type>
+  <explanation>Subjekt-Verb-Kongruenz: "Er" braucht die Form "geht".</explanation>
 </item>
-</corrections>''';
+</corrections>
+
+Beispiel 2 - Text ohne Fehler:
+Eingabe: "Das Wetter ist heute schoen."
+<corrections></corrections>
+
+Analysieren Sie jetzt den Text des Nutzers im selben Format.''';
 
   static const _russianSystemPrompt = '''
 Ты точный корректор русского языка. Проанализируй входной текст и верни исправления в XML формате.
@@ -240,15 +285,24 @@ Ausgabeformat:
 - Проверяй орфографию и грамматику, включая частые опечатки и ошибки согласования.
 - Для опечаток всегда предлагай правильную форму (например, «здровствуй» -> «здравствуй»).
 
-Формат вывода:
+Примеры:
+
+Пример 1 - текст с ошибками:
+Вход: "Мы вчера гуляет в парке."
 <corrections>
 <item>
-  <original>ошибочный фрагмент</original>
-  <corrected>исправленный фрагмент</corrected>
-  <type>grammar|spelling|punctuation|style</type>
-  <explanation>краткое объяснение ошибки</explanation>
+  <original>Мы вчера гуляет в парке.</original>
+  <corrected>Мы вчера гуляли в парке.</corrected>
+  <type>grammar</type>
+  <explanation>Согласование подлежащего и сказуемого: для "Мы" нужна форма "гуляли".</explanation>
 </item>
-</corrections>''';
+</corrections>
+
+Пример 2 - текст без ошибок:
+Вход: "Сегодня хорошая погода."
+<corrections></corrections>
+
+Теперь проанализируй текст пользователя в том же формате.''';
 
   static const _portugueseSystemPrompt = '''
 Você é um corretor gramatical preciso do português. Analise o texto de entrada e produza correções em formato XML.
@@ -264,15 +318,24 @@ Regras:
 - Seja conservador: em caso de dúvida, não sinalize.
 - Verifique: concordância verbal e nominal, uso de crase (à), regência verbal e nominal, colocação pronominal (próclise, mesóclise, ênclise), infinitivo pessoal, uso do subjuntivo, acentuação gráfica, palavras comumente confundidas (mal/mau, mais/mas, por que/porque/porquê/por quê, a/há, afim/a fim), ortografia e pontuação.
 
-Formato de saída:
+Exemplos:
+
+Exemplo 1 - texto com erros:
+Entrada: "Eles vai para casa."
 <corrections>
 <item>
-  <original>texto com erro</original>
-  <corrected>texto corrigido</corrected>
-  <type>grammar|spelling|punctuation|style</type>
-  <explanation>breve explicação do erro</explanation>
+  <original>Eles vai para casa.</original>
+  <corrected>Eles vão para casa.</corrected>
+  <type>grammar</type>
+  <explanation>Concordância verbal: com "Eles", o verbo deve ser "vão".</explanation>
 </item>
-</corrections>''';
+</corrections>
+
+Exemplo 2 - texto sem erros:
+Entrada: "O tempo está bom hoje."
+<corrections></corrections>
+
+Agora analise o texto do usuário usando o mesmo formato.''';
 
   /// GBNF grammar for constraining model output to valid XML corrections.
   static const gbnfGrammar = r'''
