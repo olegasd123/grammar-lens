@@ -119,7 +119,7 @@ class PreferencesRepository {
 
   double _normalizeTemperature(double? value) {
     if (value == null || value.isNaN || !value.isFinite) {
-      return 0.1;
+      return 0.0;
     }
     return value.clamp(0.0, 1.0).toDouble();
   }
@@ -133,7 +133,7 @@ class PreferencesRepository {
 
   int _normalizeTopK(int? value) {
     if (value == null) {
-      return 40;
+      return 10;
     }
     return value.clamp(0, 200);
   }

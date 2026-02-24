@@ -4,7 +4,7 @@ Analysis of the current prompt system, inference parameters, and response handli
 
 ---
 
-## 1. Enable GBNF Constrained Generation (High Impact)
+## [Done] 1. Enable GBNF Constrained Generation (High Impact)
 
 **Problem:** `grammarGbnf` is defined in `InferenceConfig` and a GBNF grammar exists in `PromptBuilder.gbnfGrammar`, but it is never actually passed to the inference engine. The default is `null`, and `_buildInferenceConfig()` in `editor_page.dart` doesn't set it. The model is free to generate arbitrary text, relying entirely on prompt adherence.
 
@@ -27,7 +27,7 @@ return const InferenceConfig.grammar().copyWith(
 
 ---
 
-## 2. Reduce Temperature to 0.0 for Determinism
+## [Done] 2. Reduce Temperature to 0.0 for Determinism
 
 **Current:** `temperature = 0.1`
 
@@ -117,7 +117,7 @@ content ::= original corrected type explanation
 
 ---
 
-## 5. Tighten the topK Parameter
+## [Done] 5. Tighten the topK Parameter
 
 **Current:** `topK = 40`
 

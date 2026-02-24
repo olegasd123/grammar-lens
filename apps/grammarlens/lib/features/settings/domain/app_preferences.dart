@@ -34,9 +34,9 @@ class AppPreferences {
     this.defaultLanguage = 'auto',
     this.autoCheck = true,
     this.editorFontScale = 1.0,
-    this.aiTemperature = 0.1,
+    this.aiTemperature = 0.0,
     this.aiTopP = 0.9,
-    this.aiTopK = 40,
+    this.aiTopK = 10,
     this.aiRepeatPenalty = 1.1,
     this.showDebugMenu = true,
   });

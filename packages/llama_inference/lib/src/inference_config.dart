@@ -4,7 +4,7 @@ class InferenceConfig {
   final int maxTokens;
 
   /// Sampling temperature. Lower = more deterministic.
-  /// For grammar correction, use 0.1-0.3.
+  /// For grammar correction, use 0.0-0.2.
   final double temperature;
 
   /// Nucleus sampling threshold.
@@ -35,9 +35,9 @@ class InferenceConfig {
 
   const InferenceConfig({
     this.maxTokens = 512,
-    this.temperature = 0.1,
+    this.temperature = 0.0,
     this.topP = 0.9,
-    this.topK = 40,
+    this.topK = 10,
     this.repeatPenalty = 1.1,
     this.stopTokens = const ['</corrections>'],
     this.grammarGbnf,
@@ -49,9 +49,9 @@ class InferenceConfig {
   /// Default config optimized for grammar correction tasks.
   const InferenceConfig.grammar()
       : maxTokens = 512,
-        temperature = 0.1,
+        temperature = 0.0,
         topP = 0.9,
-        topK = 40,
+        topK = 10,
         repeatPenalty = 1.1,
         stopTokens = const ['</corrections>'],
         grammarGbnf = null,
