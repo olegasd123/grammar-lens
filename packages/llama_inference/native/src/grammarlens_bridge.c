@@ -244,6 +244,19 @@ GL_API int32_t gl_decode_single(
 
 // ── Sampling ─────────────────────────────────────────────────────────────────
 
+// Internal struct: grammar is kept separate from the sampling chain.
+//
+// llama.cpp requires grammar to be applied *before* the chain (which ends
+// with dist/greedy token selection), then validated via rejection sampling.
+// Putting grammar inside the chain after dist causes GGML_ABORT because the
+// grammar's accept() sees non-grammar tokens and corrupts its state.
+//
+// This matches the approach in llama.cpp's own common_sampler_sample().
+typedef struct {
+    struct llama_sampler* chain;   // penalties → top-k → top-p → temp → dist/greedy
+    struct llama_sampler* grammar; // grammar constraint (NULL if unconstrained)
+} gl_sampler_pair;
+
 GL_API gl_sampler_t gl_sampler_create(
     gl_model_t  model,
     float       temp,
@@ -275,7 +288,7 @@ GL_API gl_sampler_t gl_sampler_create(
         llama_sampler_chain_add(chain, llama_sampler_init_top_p(top_p, 1));
     }
 
-    // Temperature
+    // Temperature + token selection
     if (temp > 0.0f) {
         llama_sampler_chain_add(chain, llama_sampler_init_temp(temp));
         llama_sampler_chain_add(chain, llama_sampler_init_dist(seed));
@@ -283,16 +296,20 @@ GL_API gl_sampler_t gl_sampler_create(
         llama_sampler_chain_add(chain, llama_sampler_init_greedy());
     }
 
-    // Grammar constraint
+    // Grammar constraint — kept separate from the chain
+    struct llama_sampler* grammar = NULL;
     if (grammar_gbnf != NULL && grammar_gbnf[0] != '\0') {
         const struct llama_vocab* vocab = llama_model_get_vocab(
             (const struct llama_model*)model
         );
-        llama_sampler_chain_add(chain,
-            llama_sampler_init_grammar(vocab, grammar_gbnf, "root"));
+        grammar = llama_sampler_init_grammar(vocab, grammar_gbnf, "root");
     }
 
-    return (gl_sampler_t)chain;
+    gl_sampler_pair* pair = (gl_sampler_pair*)malloc(sizeof(gl_sampler_pair));
+    pair->chain   = chain;
+    pair->grammar = grammar;
+
+    return (gl_sampler_t)pair;
 }
 
 GL_API int32_t gl_sampler_sample(
@@ -300,25 +317,72 @@ GL_API int32_t gl_sampler_sample(
     gl_context_t ctx,
     int32_t      idx
 ) {
-    return llama_sampler_sample(
-        (struct llama_sampler*)sampler,
-        (struct llama_context*)ctx,
-        idx
+    gl_sampler_pair* pair = (gl_sampler_pair*)sampler;
+    struct llama_context* context = (struct llama_context*)ctx;
+
+    if (!pair->grammar) {
+        // No grammar — delegate to chain directly.
+        return llama_sampler_sample(pair->chain, context, idx);
+    }
+
+    // Grammar-aware sampling (mirrors llama.cpp common_sampler_sample):
+    //   1. Build candidate array from logits
+    //   2. Apply grammar first (mask non-grammar tokens)
+    //   3. Apply chain (penalties, top-k, top-p, temp, dist → selects token)
+
+    const float* logits = llama_get_logits_ith(context, idx);
+    const struct llama_model* mdl = llama_get_model(context);
+    const struct llama_vocab* vocab = llama_model_get_vocab(mdl);
+    const int32_t n_vocab = llama_vocab_n_tokens(vocab);
+
+    llama_token_data* candidates = (llama_token_data*)malloc(
+        (size_t)n_vocab * sizeof(llama_token_data)
     );
+    for (int32_t i = 0; i < n_vocab; i++) {
+        candidates[i].id    = i;
+        candidates[i].logit = logits[i];
+        candidates[i].p     = 0.0f;
+    }
+    llama_token_data_array cur_p = {
+        candidates, (size_t)n_vocab, /*selected=*/ -1, /*sorted=*/ false
+    };
+
+    // Apply grammar constraint first — sets logit to -inf for invalid tokens
+    llama_sampler_apply(pair->grammar, &cur_p);
+
+    // Then apply the chain (penalties, filtering, temp, and final selection)
+    llama_sampler_apply(pair->chain, &cur_p);
+
+    const int32_t token_id = cur_p.data[cur_p.selected].id;
+    free(candidates);
+
+    return token_id;
 }
 
 GL_API void gl_sampler_accept(gl_sampler_t sampler, int32_t token) {
-    llama_sampler_accept((struct llama_sampler*)sampler, token);
+    gl_sampler_pair* pair = (gl_sampler_pair*)sampler;
+    if (pair->grammar) {
+        llama_sampler_accept(pair->grammar, token);
+    }
+    llama_sampler_accept(pair->chain, token);
 }
 
 GL_API void gl_sampler_reset(gl_sampler_t sampler) {
-    llama_sampler_reset((struct llama_sampler*)sampler);
+    gl_sampler_pair* pair = (gl_sampler_pair*)sampler;
+    if (pair->grammar) {
+        llama_sampler_reset(pair->grammar);
+    }
+    llama_sampler_reset(pair->chain);
 }
 
 GL_API void gl_sampler_free(gl_sampler_t sampler) {
-    if (sampler) {
-        llama_sampler_free((struct llama_sampler*)sampler);
+    if (!sampler) return;
+    gl_sampler_pair* pair = (gl_sampler_pair*)sampler;
+    if (pair->grammar) {
+        llama_sampler_free(pair->grammar);
     }
+    llama_sampler_free(pair->chain);
+    free(pair);
 }
 
 // ── Performance ──────────────────────────────────────────────────────────────

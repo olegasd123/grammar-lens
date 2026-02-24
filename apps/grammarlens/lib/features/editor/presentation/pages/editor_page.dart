@@ -129,6 +129,7 @@ class _EditorPageState extends State<EditorPage> {
       topP: topP,
       topK: topK,
       repeatPenalty: repeatPenalty,
+      grammarGbnf: PromptBuilder.gbnfGrammar,
     );
   }
 
